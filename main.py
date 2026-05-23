@@ -10,11 +10,24 @@ from email.header import decode_header
 
 
 def get_env(name, required=True, default=None):
-    value = os.getenv(name, default)
-    if required and not value:
+    value = os.getenv(name)
+    if value:
+        return value.strip()
+    if default is not None:
+        return default
+    if required:
         print(f"ERROR: missing required environment variable {name}")
         sys.exit(1)
     return value
+
+
+def fail(message):
+    print(f"ERROR: {message}", file=sys.stderr)
+    sys.exit(1)
+
+
+def normalize_gmail_app_password(password):
+    return re.sub(r"\s+", "", password)
 
 
 def decode_mime_header(value):
@@ -68,12 +81,12 @@ def parse_alert(subject, body):
     price = price_match.group(0) if price_match else None
 
     route_match = re.search(
-        r"\b([A-Z]{2,3}|[A-Z][a-z]+(?: [A-Z][a-z]+)?)\s*(?:→|->|—|-|to)\s*([A-Z]{2,3}|[A-Z][a-z]+(?: [A-Z][a-z]+)?)\b",
+        r"\b([A-Z]{2,3}|[A-Z][a-z]+(?: [A-Z][a-z]+)?)\s*(?:\u2192|->|\u2014|-|to)\s*([A-Z]{2,3}|[A-Z][a-z]+(?: [A-Z][a-z]+)?)\b",
         combined,
         re.I,
     )
     if route_match:
-        route = f"{route_match.group(1).strip()} → {route_match.group(2).strip()}"
+        route = f"{route_match.group(1).strip()} -> {route_match.group(2).strip()}"
     else:
         route = None
 
@@ -84,7 +97,7 @@ def parse_alert(subject, body):
             re.I,
         )
         if route_match:
-            route = f"{route_match.group(1).strip()} → {route_match.group(2).strip()}"
+            route = f"{route_match.group(1).strip()} -> {route_match.group(2).strip()}"
 
     summary = []
     if route:
@@ -123,23 +136,61 @@ def select_label_mailbox(imap_conn, label):
     return False
 
 
+def select_all_mailbox(imap_conn):
+    for mailbox in ("[Gmail]/All Mail", "[GoogleMail]/All Mail"):
+        try:
+            status, _ = imap_conn.select(f'"{mailbox}"')
+            if status == "OK":
+                return mailbox
+        except imaplib.IMAP4.error:
+            pass
+    return None
+
+
+def connect_to_gmail(gmail_user, gmail_password):
+    print("Connecting to Gmail IMAP...")
+    imap_conn = imaplib.IMAP4_SSL("imap.gmail.com", 993)
+    try:
+        imap_conn.login(gmail_user, normalize_gmail_app_password(gmail_password))
+    except imaplib.IMAP4.error as exc:
+        try:
+            imap_conn.logout()
+        except imaplib.IMAP4.error:
+            pass
+        fail(
+            "Gmail IMAP login failed. Use a Gmail App Password in the "
+            "GMAIL_APP_PASSWORD secret, not your normal Google account password. "
+            "The account must have 2-Step Verification enabled and IMAP access enabled. "
+            f"Gmail response: {exc}"
+        )
+    return imap_conn
+
+
 def main():
     gmail_user = get_env("GMAIL_USER")
     gmail_password = get_env("GMAIL_APP_PASSWORD")
-    gmail_label = get_env("GMAIL_LABEL", required=False, default="Travel/FlightAlerts")
+    gmail_label = get_env("GMAIL_LABEL", required=False, default="Holidays/Flight alerts")
     telegram_token = get_env("TELEGRAM_BOT_TOKEN")
     telegram_chat_id = get_env("TELEGRAM_CHAT_ID")
 
-    print("Connecting to Gmail IMAP...")
-    imap_conn = imaplib.IMAP4_SSL("imap.gmail.com", 993)
-    imap_conn.login(gmail_user, gmail_password)
+    print(f"Checking Gmail label: {gmail_label}")
+    imap_conn = connect_to_gmail(gmail_user, gmail_password)
 
     selected_label = select_label_mailbox(imap_conn, gmail_label)
     if selected_label:
+        print(f"Selected Gmail label mailbox: {gmail_label}")
         status, data = imap_conn.search(None, "UNSEEN")
     else:
-        print(f"Warning: could not select mailbox '{gmail_label}'. Falling back to INBOX search with label filter.")
-        imap_conn.select("INBOX")
+        print(
+            f"Warning: could not select mailbox '{gmail_label}'. "
+            "Make sure the label exists and is shown in IMAP. "
+            "Falling back to All Mail search with label filter."
+        )
+        all_mailbox = select_all_mailbox(imap_conn)
+        if not all_mailbox:
+            imap_conn.logout()
+            fail("Could not select Gmail All Mail mailbox for fallback search.")
+        print(f"Selected Gmail fallback mailbox: {all_mailbox}")
         status, data = imap_conn.search(None, "UNSEEN", "X-GM-LABELS", f'"{gmail_label}"')
 
     if status != "OK":
@@ -147,7 +198,7 @@ def main():
 
     message_ids = data[0].split() if data and data[0] else []
     if not message_ids:
-        print("No new flight alerts found.")
+        print(f"No unread flight alerts found in label '{gmail_label}'.")
         imap_conn.logout()
         return
 
@@ -168,7 +219,7 @@ def main():
         alert_parts = parse_alert(subject, body)
         summary = " | ".join(alert_parts) if alert_parts else "New flight alert found"
         message_text = (
-            f"✈️ Flight Alert\n"
+            f"Flight Alert\n"
             f"Subject: {subject or 'No subject'}\n"
             f"From: {from_header or 'Unknown'}\n"
             f"Label: {gmail_label}\n"
