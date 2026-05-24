@@ -19,6 +19,12 @@ Only unread messages trigger a Telegram notification. If you open the email in G
 - Maximum annual leave needed: 1 weekday
 - Weekends do not count as annual leave
 - Ireland public holidays and Good Friday do not count as annual leave
+- Destination month filters allow 2 days of overflow at the start or end of an enabled month
+- Budapest: April, May, June, September, October
+- Copenhagen: May, June, July, August, September
+- Krakow: May, June, September, October, December
+- Milan: April, May, June, September, October
+- Riga: May, June, July, August, September
 - Non-matching flight alert emails are marked as read after being checked
 
 ## Setup

@@ -8,6 +8,7 @@ import urllib.request
 import email
 import calendar
 import datetime as dt
+import unicodedata
 from email.header import decode_header
 
 
@@ -99,6 +100,24 @@ MONTHS = {
 }
 MIN_NIGHTS = 2
 MAX_DAYS_OFF = 1
+MONTH_OVERFLOW_DAYS = 2
+DESTINATION_MONTHS = {
+    "Budapest": {4, 5, 6, 9, 10},
+    "Copenhagen": {5, 6, 7, 8, 9},
+    "Krakow": {5, 6, 9, 10, 12},
+    "Milan": {4, 5, 6, 9, 10},
+    "Riga": {5, 6, 7, 8, 9},
+}
+DESTINATION_AIRPORTS = {
+    "BGY": "Milan",
+    "BUD": "Budapest",
+    "CPH": "Copenhagen",
+    "KRK": "Krakow",
+    "LIN": "Milan",
+    "MIL": "Milan",
+    "MXP": "Milan",
+    "RIX": "Riga",
+}
 
 
 def normalize_alert_text(value):
@@ -134,6 +153,40 @@ def extract_price(text):
     if not match:
         return None
     return normalize_alert_text(match.group(0))
+
+
+def normalize_city_name(value):
+    normalized = unicodedata.normalize("NFKD", value)
+    return "".join(char for char in normalized if not unicodedata.combining(char)).lower()
+
+
+def destination_from_context(context_text):
+    normalized_context = normalize_city_name(context_text)
+    for destination in DESTINATION_MONTHS:
+        if normalize_city_name(destination) in normalized_context:
+            return destination
+    return None
+
+
+def destination_from_deal(deal, context_text):
+    route_match = re.search(r"\b([A-Z]{3})\s*-\s*([A-Z]{3})\b", deal.get("route", ""))
+    if route_match:
+        first_code = route_match.group(1).upper()
+        second_code = route_match.group(2).upper()
+        destination_code = first_code if second_code == "DUB" else second_code
+        destination = DESTINATION_AIRPORTS.get(destination_code)
+        if destination:
+            return destination
+
+    return destination_from_context(context_text)
+
+
+def month_name(month):
+    return calendar.month_abbr[month]
+
+
+def format_months(months):
+    return ", ".join(month_name(month) for month in sorted(months))
 
 
 def first_weekday(year, month, weekday):
@@ -258,7 +311,22 @@ def count_days_off(start_date, end_date):
     return days_off
 
 
-def add_filter_details(deal, context_date):
+def overlaps_allowed_month(start_date, end_date, allowed_months):
+    for year in range(start_date.year - 1, end_date.year + 2):
+        for month in allowed_months:
+            month_start = dt.date(year, month, 1)
+            month_end = dt.date(year, month, calendar.monthrange(year, month)[1])
+            has_actual_overlap = start_date <= month_end and end_date >= month_start
+            if not has_actual_overlap:
+                continue
+            allowed_start = month_start - dt.timedelta(days=MONTH_OVERFLOW_DAYS)
+            allowed_end = month_end + dt.timedelta(days=MONTH_OVERFLOW_DAYS)
+            if start_date >= allowed_start and end_date <= allowed_end:
+                return True
+    return False
+
+
+def add_filter_details(deal, context_date, context_text):
     dates = parse_deal_date_range(deal["dates"], context_date)
     if not dates:
         deal["eligible"] = False
@@ -268,17 +336,28 @@ def add_filter_details(deal, context_date):
     start_date, end_date = dates
     nights = (end_date - start_date).days
     days_off = count_days_off(start_date, end_date)
+    destination = destination_from_deal(deal, context_text)
+    allowed_months = DESTINATION_MONTHS.get(destination, set())
+    month_allowed = bool(allowed_months) and overlaps_allowed_month(start_date, end_date, allowed_months)
     deal.update({
+        "destination": destination,
         "start_date": start_date,
         "end_date": end_date,
         "nights": nights,
         "days_off": days_off,
-        "eligible": nights >= MIN_NIGHTS and days_off <= MAX_DAYS_OFF,
+        "eligible": nights >= MIN_NIGHTS and days_off <= MAX_DAYS_OFF and month_allowed,
     })
     if nights < MIN_NIGHTS:
         deal["filter_reason"] = f"{nights} night(s), minimum is {MIN_NIGHTS}"
     elif days_off > MAX_DAYS_OFF:
         deal["filter_reason"] = f"{days_off} day(s) off, maximum is {MAX_DAYS_OFF}"
+    elif not destination:
+        deal["filter_reason"] = "destination not configured"
+    elif not month_allowed:
+        deal["filter_reason"] = (
+            f"{destination} is only enabled for {format_months(allowed_months)} "
+            f"(with {MONTH_OVERFLOW_DAYS}-day overflow)"
+        )
     else:
         deal["filter_reason"] = "matched filters"
     return deal
@@ -286,7 +365,7 @@ def add_filter_details(deal, context_date):
 
 def filter_deals(deals, context_text):
     context_date = extract_context_date(context_text)
-    detailed = [add_filter_details(dict(deal), context_date) for deal in deals]
+    detailed = [add_filter_details(dict(deal), context_date, context_text) for deal in deals]
     return [deal for deal in detailed if deal["eligible"]], detailed
 
 
