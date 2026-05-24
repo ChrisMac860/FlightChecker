@@ -8,10 +8,18 @@ A GitHub Actions-driven flight alert monitor that checks Gmail for new messages 
 - GitHub Actions runs every 15 minutes
 - `main.py` connects to Gmail via IMAP using app password
 - It searches unread messages in the configured label
-- It sends a Telegram message for each new alert
+- It sends a Telegram message when at least one deal matches the filters
 - It marks processed messages as read
 
 Only unread messages trigger a Telegram notification. If you open the email in Gmail before the workflow runs, Gmail marks it read and the bot skips it.
+
+## Filters
+
+- Minimum trip length: 2 nights
+- Maximum annual leave needed: 1 weekday
+- Weekends do not count as annual leave
+- Ireland public holidays and Good Friday do not count as annual leave
+- Non-matching flight alert emails are marked as read after being checked
 
 ## Setup
 
