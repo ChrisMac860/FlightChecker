@@ -3,10 +3,17 @@ name: Flight Alert Bot
 on:
   schedule:
     - cron: "*/15 * * * *"
+    - cron: "0 7 * * *"
   workflow_dispatch:
+    inputs:
+      flight_sources:
+        description: "Comma-separated sources to run: gmail, ryanair"
+        required: false
+        default: "gmail,ryanair"
 
 jobs:
-  check-flight-alerts:
+  check-gmail-flight-alerts:
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '*/15 * * * *') || (github.event_name == 'workflow_dispatch' && contains(inputs.flight_sources, 'gmail')) }}
     runs-on: ubuntu-latest
 
     steps:
@@ -23,9 +30,39 @@ jobs:
 
       - name: Run flight alert checker
         env:
+          FLIGHT_SOURCES: gmail
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           GMAIL_LABEL: ${{ vars.GMAIL_LABEL || 'Holidays/Flight alerts' }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python main.py
+
+  check-ryanair-fares:
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 7 * * *') || (github.event_name == 'workflow_dispatch' && contains(inputs.flight_sources, 'ryanair')) }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Ryanair fare checker
+        env:
+          FLIGHT_SOURCES: ryanair
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RYANAIR_ORIGIN_AIRPORTS: ${{ vars.RYANAIR_ORIGIN_AIRPORTS || 'DUB' }}
+          RYANAIR_MARKET: ${{ vars.RYANAIR_MARKET || 'en-ie' }}
+          RYANAIR_SCAN_MONTHS: ${{ vars.RYANAIR_SCAN_MONTHS || '12' }}
+          RYANAIR_MAX_RETURN_PRICE: ${{ vars.RYANAIR_MAX_RETURN_PRICE || '100' }}
+          RYANAIR_DIGEST_LIMIT: ${{ vars.RYANAIR_DIGEST_LIMIT || '6' }}
+          RYANAIR_MAX_TRIP_NIGHTS: ${{ vars.RYANAIR_MAX_TRIP_NIGHTS || '7' }}
         run: python main.py
