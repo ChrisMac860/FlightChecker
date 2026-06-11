@@ -122,9 +122,11 @@ def html_to_text(html_body):
 
 PRICE_RE = r"(?:US\$|USD\s?|\$|\u00a3|GBP\s?|\u20ac|EUR\s?)\s?\d{2,4}(?:[.,]\d{2})?"
 DAY_RE = r"(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)"
+MONTH_RE = r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)"
+DATE_PART_RE = rf"(?:{DAY_RE}\s+)?\d{{1,2}}\s+{MONTH_RE}"
 DATE_RANGE_RE = (
-    rf"{DAY_RE}\s+\d{{1,2}}\s+[A-Z][a-z]{{2}}\s*[-\u2013]\s*"
-    rf"{DAY_RE}\s+\d{{1,2}}\s+[A-Z][a-z]{{2}}"
+    rf"{DATE_PART_RE}\s*[-\u2013]\s*"
+    rf"{DATE_PART_RE}"
 )
 MONTHS = {
     "jan": 1,
@@ -136,6 +138,7 @@ MONTHS = {
     "jul": 7,
     "aug": 8,
     "sep": 9,
+    "sept": 9,
     "oct": 10,
     "nov": 11,
     "dec": 12,
@@ -160,6 +163,25 @@ DESTINATION_AIRPORTS = {
     "MXP": "Milan",
     "RIX": "Riga",
 }
+KNOWN_ROUTE_PLACES = (
+    "Copenhagen",
+    "Budapest",
+    "Krakow",
+    "Krak\u00f3w",
+    "Dublin",
+    "Milan",
+    "Riga",
+    "BGY",
+    "BUD",
+    "CPH",
+    "DUB",
+    "KRK",
+    "LIN",
+    "MIL",
+    "MXP",
+    "RIX",
+)
+KNOWN_ROUTE_PLACE_RE = "|".join(re.escape(place) for place in KNOWN_ROUTE_PLACES)
 RYANAIR_ROUTES_URL = "https://services-api.ryanair.com/views/locate/5/routes/en/airport/{origin}"
 RYANAIR_ROUND_TRIP_FARES_URL = "https://www.ryanair.com/api/farfnd/v4/roundTripFares"
 RYANAIR_USER_AGENT = "FlightChecker/1.0"
@@ -170,11 +192,20 @@ RYANAIR_DEFAULT_MAX_RETURN_PRICE = 100.0
 RYANAIR_DEFAULT_DIGEST_LIMIT = 6
 RYANAIR_DEFAULT_MAX_TRIP_NIGHTS = 7
 VALID_FLIGHT_SOURCES = {"gmail", "ryanair"}
+GMAIL_FALLBACK_SEARCHES = (
+    ("Google Flights sender", ("UNSEEN", "FROM", '"noreply-travel@google.com"')),
+    (
+        "Skyscanner sender",
+        ("UNSEEN", "FROM", '"no-reply@sender.skyscanner.com"', "SUBJECT", '"Latest prices for your flights"'),
+    ),
+)
 
 
 def normalize_alert_text(value):
+    value = re.sub(r"\[([^\]]+)\]\(https?://[^)]+\)", r"\1", value)
     value = re.sub(r"\(https?://\S+\)", "", value)
     value = re.sub(r"https?://\S+", "", value)
+    value = re.sub(r"\[([^\]]+)\]", r"\1", value)
     value = value.replace("\u2013", "-").replace("\u2014", "-")
     return re.sub(r"\s+", " ", value).strip()
 
@@ -186,6 +217,7 @@ def clean_place(value):
 
 def extract_route(text):
     patterns = (
+        rf"\b({KNOWN_ROUTE_PLACE_RE})\s+(?:to|->)\s+({KNOWN_ROUTE_PLACE_RE})\b",
         r"\bfrom\s+([A-Z][A-Za-z .'-]+?)\s+to\s+([A-Z][A-Za-z .'-]+?)(?=\s+flights?\b|[\.,;:]|$)",
         r"\b([A-Z][A-Za-z .'-]+?)\s+to\s+([A-Z][A-Za-z .'-]+?)\s+flights?\b",
         r"\b([A-Z]{3})\s*[-\u2013]\s*([A-Z]{3})\b",
@@ -207,6 +239,11 @@ def extract_price(text):
     return normalize_alert_text(match.group(0))
 
 
+def month_number(value):
+    normalized = value.strip().lower()
+    return MONTHS.get(normalized) or MONTHS.get(normalized[:3])
+
+
 def normalize_city_name(value):
     normalized = unicodedata.normalize("NFKD", value)
     return "".join(char for char in normalized if not unicodedata.combining(char)).lower()
@@ -220,8 +257,34 @@ def destination_from_context(context_text):
     return None
 
 
+def destination_from_place(place):
+    airport_destination = DESTINATION_AIRPORTS.get(place.upper())
+    if airport_destination:
+        return airport_destination
+
+    normalized_place = normalize_city_name(place)
+    for destination in DESTINATION_MONTHS:
+        if normalize_city_name(destination) == normalized_place:
+            return destination
+    return None
+
+
 def destination_from_deal(deal, context_text):
-    route_match = re.search(r"\b([A-Z]{3})\s*-\s*([A-Z]{3})\b", deal.get("route", ""))
+    route_text = deal.get("route") or ""
+    named_route_match = re.search(
+        rf"\b({KNOWN_ROUTE_PLACE_RE})\s*(?:->|to)\s*({KNOWN_ROUTE_PLACE_RE})\b",
+        route_text,
+        re.I,
+    )
+    if named_route_match:
+        first_place = named_route_match.group(1)
+        second_place = named_route_match.group(2)
+        destination_place = first_place if normalize_city_name(second_place) == "dublin" else second_place
+        destination = destination_from_place(destination_place)
+        if destination:
+            return destination
+
+    route_match = re.search(r"\b([A-Z]{3})\s*-\s*([A-Z]{3})\b", route_text)
     if route_match:
         first_code = route_match.group(1).upper()
         second_code = route_match.group(2).upper()
@@ -308,7 +371,7 @@ def ireland_days_off(year):
 def extract_context_date(text):
     match = re.search(r"\b(\d{1,2})\s+([A-Z][a-z]+)\s+(20\d{2})\b", text)
     if match:
-        month = MONTHS.get(match.group(2)[:3].lower())
+        month = month_number(match.group(2))
         if month:
             return dt.date(int(match.group(3)), month, int(match.group(1)))
 
@@ -325,16 +388,16 @@ def extract_context_date(text):
 
 def parse_deal_date_range(date_range, context_date):
     match = re.search(
-        rf"{DAY_RE}\s+(?P<start_day>\d{{1,2}})\s+(?P<start_month>[A-Z][a-z]{{2}})\s*-\s*"
-        rf"{DAY_RE}\s+(?P<end_day>\d{{1,2}})\s+(?P<end_month>[A-Z][a-z]{{2}})",
+        rf"(?:{DAY_RE}\s+)?(?P<start_day>\d{{1,2}})\s+(?P<start_month>{MONTH_RE})\s*-\s*"
+        rf"(?:{DAY_RE}\s+)?(?P<end_day>\d{{1,2}})\s+(?P<end_month>{MONTH_RE})",
         normalize_alert_text(date_range),
         re.I,
     )
     if not match:
         return None
 
-    start_month = MONTHS.get(match.group("start_month").lower())
-    end_month = MONTHS.get(match.group("end_month").lower())
+    start_month = month_number(match.group("start_month"))
+    end_month = month_number(match.group("end_month"))
     if not start_month or not end_month:
         return None
 
@@ -648,11 +711,11 @@ def build_ryanair_digest(deals, limit=RYANAIR_DEFAULT_DIGEST_LIMIT):
     return message
 
 
-def parse_flight_deals(body):
+def parse_google_flight_deals(body):
     text = normalize_alert_text(body)
     deal_pattern = re.compile(
         rf"(?P<dates>{DATE_RANGE_RE})\s+"
-        rf"(?:SAVE\s+\d+%\s+)?From\s+(?P<price>{PRICE_RE})\s+"
+        rf"(?:SAVE\s+\d+%\s*)?From\s*(?P<price>{PRICE_RE})\s+"
         rf"(?:View\s+)?(?P<airline>[A-Z][A-Za-z0-9 .&'-]+?)\s*\u00b7\s*"
         rf"(?P<stops>Non-stop|\d+\s+stops?)\s*\u00b7\s*"
         rf"(?P<route>[A-Z]{{3}}\s*[-\u2013]\s*[A-Z]{{3}})\s*\u00b7\s*"
@@ -670,6 +733,77 @@ def parse_flight_deals(body):
             "duration": normalize_alert_text(match.group("duration")),
         })
     return deals
+
+
+def is_skyscanner_price_alert(subject, from_header, body):
+    text = f"{subject}\n{from_header}\n{body}".lower()
+    if "skyscanner" not in text:
+        return False
+    return any(
+        phrase in text
+        for phrase in (
+            "price alert",
+            "price changed",
+            "prices changed",
+            "track prices",
+            "tracked route",
+            "tracked trip",
+            "pricealerts",
+        )
+    )
+
+
+def parse_skyscanner_flight_deals(body, subject="", from_header=""):
+    if not is_skyscanner_price_alert(subject, from_header, body):
+        return []
+
+    combined = normalize_alert_text(f"{subject}\n{body}")
+    card_pattern = re.compile(
+        rf"(?P<route>(?:{KNOWN_ROUTE_PLACE_RE})\s+(?:to|->)\s+(?:{KNOWN_ROUTE_PLACE_RE}))\s+"
+        rf"(?P<dates>{DATE_RANGE_RE})\s+"
+        rf"Economy\s+"
+        rf"Was\s+{PRICE_RE}\s+"
+        rf"(?P<price>{PRICE_RE})\s+"
+        rf"Total per traveller\s+"
+        rf"This price has just gone (?P<direction>up|down)",
+        re.I,
+    )
+    deals = []
+    for match in card_pattern.finditer(combined):
+        route = extract_route(match.group("route"))
+        direction = match.group("direction").lower()
+        deals.append({
+            "dates": normalize_alert_text(match.group("dates")),
+            "price": normalize_alert_text(match.group("price")),
+            "airline": "Skyscanner",
+            "stops": "Price alert",
+            "route": route,
+            "duration": f"Price went {direction}",
+        })
+    if deals:
+        return deals
+
+    route = extract_route(combined)
+    price = extract_price(combined)
+    date_match = re.search(DATE_RANGE_RE, combined, re.I)
+    if not route or not price or not date_match:
+        return []
+
+    return [{
+        "dates": normalize_alert_text(date_match.group(0)),
+        "price": price,
+        "airline": "Skyscanner",
+        "stops": "Price alert",
+        "route": route,
+        "duration": "Tracked route",
+    }]
+
+
+def parse_flight_deals(body, subject="", from_header=""):
+    google_deals = parse_google_flight_deals(body)
+    if google_deals:
+        return google_deals
+    return parse_skyscanner_flight_deals(body, subject=subject, from_header=from_header)
 
 
 def parse_alert(subject, body):
@@ -791,6 +925,60 @@ def connect_to_gmail(gmail_user, gmail_password):
     return imap_conn
 
 
+def search_gmail_message_ids(imap_conn, criteria):
+    status, data = imap_conn.search(None, *criteria)
+    if status != "OK":
+        raise RuntimeError("Failed to search for unread messages")
+    return data[0].split() if data and data[0] else []
+
+
+def process_gmail_message(imap_conn, num, gmail_label, telegram_token, telegram_chat_id, dry_run=False):
+    num_str = num.decode("utf-8") if isinstance(num, bytes) else str(num)
+    status, msg_data = imap_conn.fetch(num, "(RFC822)")
+    if status != "OK":
+        print(f"Skipping message {num_str}: fetch failed.")
+        return
+
+    raw_email = msg_data[0][1]
+    message = email.message_from_bytes(raw_email)
+    subject = decode_mime_header(message.get("Subject"))
+    from_header = decode_mime_header(message.get("From"))
+    body = extract_text(message)
+    deals = parse_flight_deals(body, subject=subject, from_header=from_header)
+
+    if not deals:
+        print(f"Skipping message {num_str}: no parseable flight deals found.")
+        if dry_run:
+            print(f"DRY RUN: would mark message {num_str} as read.")
+        else:
+            imap_conn.store(num, "+FLAGS", "\\Seen")
+            print(f"Marked message {num_str} as read.")
+        return
+
+    matching_deals, checked_deals = filter_deals(deals, f"{subject}\n{body}")
+    if not matching_deals:
+        reasons = sorted({deal["filter_reason"] for deal in checked_deals})
+        print(f"Skipping message {num_str}: no deals matched filters ({'; '.join(reasons)}).")
+        if dry_run:
+            print(f"DRY RUN: would mark message {num_str} as read.")
+        else:
+            imap_conn.store(num, "+FLAGS", "\\Seen")
+            print(f"Marked message {num_str} as read.")
+        return
+
+    message_text = build_alert_message(subject, from_header, gmail_label, body, matching_deals)
+
+    if dry_run:
+        print(f"DRY RUN: would send Telegram notification for message {num_str}:")
+        print(message_text)
+        print(f"DRY RUN: would mark message {num_str} as read.")
+    else:
+        print(f"Sending Telegram notification for message {num_str}...")
+        send_telegram_message(telegram_token, telegram_chat_id, message_text)
+        imap_conn.store(num, "+FLAGS", "\\Seen")
+        print(f"Marked message {num_str} as read.")
+
+
 def run_gmail_source(dry_run=False):
     gmail_user = get_env("GMAIL_USER")
     gmail_password = get_env("GMAIL_APP_PASSWORD")
@@ -804,7 +992,7 @@ def run_gmail_source(dry_run=False):
     selected_label = select_label_mailbox(imap_conn, gmail_label)
     if selected_label:
         print(f"Selected Gmail label mailbox: {gmail_label}")
-        status, data = imap_conn.search(None, "UNSEEN")
+        message_ids = search_gmail_message_ids(imap_conn, ("UNSEEN",))
     else:
         print(
             f"Warning: could not select mailbox '{gmail_label}'. "
@@ -816,63 +1004,28 @@ def run_gmail_source(dry_run=False):
             imap_conn.logout()
             fail("Could not select Gmail All Mail mailbox for fallback search.")
         print(f"Selected Gmail fallback mailbox: {all_mailbox}")
-        status, data = imap_conn.search(None, "UNSEEN", "X-GM-LABELS", f'"{gmail_label}"')
+        message_ids = search_gmail_message_ids(imap_conn, ("UNSEEN", "X-GM-LABELS", f'"{gmail_label}"'))
 
-    if status != "OK":
-        raise RuntimeError("Failed to search for unread messages")
-
-    message_ids = data[0].split() if data and data[0] else []
     if not message_ids:
         print(f"No unread flight alerts found in label '{gmail_label}'.")
-        imap_conn.logout()
-        return
+    else:
+        print(f"Found {len(message_ids)} unread message(s) in label '{gmail_label}'.")
+        for num in message_ids:
+            process_gmail_message(imap_conn, num, gmail_label, telegram_token, telegram_chat_id, dry_run=dry_run)
 
-    print(f"Found {len(message_ids)} unread message(s) in label '{gmail_label}'.")
-    for num in message_ids:
-        num_str = num.decode("utf-8") if isinstance(num, bytes) else str(num)
-        status, msg_data = imap_conn.fetch(num, "(RFC822)")
-        if status != "OK":
-            print(f"Skipping message {num_str}: fetch failed.")
-            continue
-
-        raw_email = msg_data[0][1]
-        message = email.message_from_bytes(raw_email)
-        subject = decode_mime_header(message.get("Subject"))
-        from_header = decode_mime_header(message.get("From"))
-        body = extract_text(message)
-        deals = parse_flight_deals(body)
-
-        if not deals:
-            print(f"Skipping message {num_str}: no parseable flight deals found.")
-            if dry_run:
-                print(f"DRY RUN: would mark message {num_str} as read.")
-            else:
-                imap_conn.store(num, "+FLAGS", "\\Seen")
-                print(f"Marked message {num_str} as read.")
-            continue
-
-        matching_deals, checked_deals = filter_deals(deals, f"{subject}\n{body}")
-        if not matching_deals:
-            reasons = sorted({deal["filter_reason"] for deal in checked_deals})
-            print(f"Skipping message {num_str}: no deals matched filters ({'; '.join(reasons)}).")
-            if dry_run:
-                print(f"DRY RUN: would mark message {num_str} as read.")
-            else:
-                imap_conn.store(num, "+FLAGS", "\\Seen")
-                print(f"Marked message {num_str} as read.")
-            continue
-
-        message_text = build_alert_message(subject, from_header, gmail_label, body, matching_deals)
-
-        if dry_run:
-            print(f"DRY RUN: would send Telegram notification for message {num_str}:")
-            print(message_text)
-            print(f"DRY RUN: would mark message {num_str} as read.")
-        else:
-            print(f"Sending Telegram notification for message {num_str}...")
-            send_telegram_message(telegram_token, telegram_chat_id, message_text)
-            imap_conn.store(num, "+FLAGS", "\\Seen")
-            print(f"Marked message {num_str} as read.")
+    all_mailbox = select_all_mailbox(imap_conn)
+    if not all_mailbox:
+        print("Warning: could not select Gmail All Mail mailbox for fallback sender searches.")
+    else:
+        print(f"Selected Gmail fallback mailbox: {all_mailbox}")
+        for description, criteria in GMAIL_FALLBACK_SEARCHES:
+            fallback_message_ids = search_gmail_message_ids(imap_conn, criteria)
+            if not fallback_message_ids:
+                print(f"No unread flight alerts found from {description}.")
+                continue
+            print(f"Found {len(fallback_message_ids)} unread message(s) from {description}.")
+            for num in fallback_message_ids:
+                process_gmail_message(imap_conn, num, gmail_label, telegram_token, telegram_chat_id, dry_run=dry_run)
 
     imap_conn.logout()
     print("Done.")

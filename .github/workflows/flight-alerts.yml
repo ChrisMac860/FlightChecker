@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       flight_sources:
-        description: "Comma-separated sources to run: gmail, ryanair"
+        description: "Comma-separated sources to run: gmail (Google Flights/Skyscanner email alerts), ryanair"
         required: false
         default: "gmail,ryanair"
 

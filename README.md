@@ -1,18 +1,18 @@
 # FlightChecker
 
-A GitHub Actions-driven flight monitor that checks Gmail flight alerts and can also query Ryanair fare APIs for cheap direct return trips.
+A GitHub Actions-driven flight monitor that checks Google Flights and Skyscanner Gmail flight alerts and can also query Ryanair fare APIs for cheap direct return trips.
 
 ## Architecture
 
-- Gmail source runs every 15 minutes by default.
+- Gmail source runs every 15 minutes by default for Google Flights and Skyscanner email alerts.
 - Ryanair source runs daily at 07:00 UTC by default.
 - `main.py` selects sources from `FLIGHT_SOURCES`.
-- Gmail connects through IMAP, parses unread messages in the configured label, sends matching Telegram alerts, and marks processed messages as read.
+- Gmail connects through IMAP, parses unread Google Flights and Skyscanner messages in the configured label, sends matching Telegram alerts, and marks processed messages as read.
 - Ryanair discovers direct routes from the configured origin airports, queries round-trip fares, applies the same trip filters, and sends one compact Telegram digest.
 
 ## Sources
 
-- `gmail` - existing email alert parser. This remains the default when `FLIGHT_SOURCES` is not set.
+- `gmail` - email alert parser for Google Flights and Skyscanner price alerts. This remains the default when `FLIGHT_SOURCES` is not set.
 - `ryanair` - unauthenticated Ryanair web fare endpoints. API failures are logged as warnings so they do not affect Gmail checks.
 
 ## Filters
@@ -52,6 +52,13 @@ Optional repository variables:
 - `RYANAIR_MAX_TRIP_NIGHTS` - defaults to `7`
 
 For Gmail, confirm the account has 2-Step Verification enabled, IMAP enabled, and the `Flight alerts` label set to "Show in IMAP".
+
+The Gmail source checks unread messages in `Holidays/Flight alerts`, then falls back to unread messages from the known alert senders below. Gmail filters are still useful for visibility, but Skyscanner alerts can be picked up even if the label is missing.
+
+- Google Flights: from `noreply-travel@google.com`
+- Skyscanner: from `no-reply@sender.skyscanner.com`, subject `Latest prices for your flights`
+
+Skyscanner parsing reads each `Your Price Alert` card and uses the current total per-traveller price after the `Was` price.
 
 ## Run Locally
 
