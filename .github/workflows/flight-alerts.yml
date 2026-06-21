@@ -7,14 +7,17 @@ on:
   workflow_dispatch:
     inputs:
       flight_sources:
-        description: "Comma-separated sources to run: gmail (Google Flights/Skyscanner email alerts), ryanair"
+        description: "Comma-separated sources to run: gmail (Google Flights/Skyscanner email alerts), ryanair, aviasales"
         required: false
-        default: "gmail,ryanair"
+        default: "gmail,ryanair,aviasales"
 
 jobs:
   check-gmail-flight-alerts:
     if: ${{ (github.event_name == 'schedule' && github.event.schedule == '*/15 * * * *') || (github.event_name == 'workflow_dispatch' && contains(inputs.flight_sources, 'gmail')) }}
     runs-on: ubuntu-latest
+    concurrency:
+      group: flight-alerts-gmail
+      cancel-in-progress: false
 
     steps:
       - name: Checkout repo
@@ -24,9 +27,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
 
       - name: Run flight alert checker
         env:
@@ -38,9 +38,14 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python main.py
 
-  check-ryanair-fares:
-    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 7 * * *') || (github.event_name == 'workflow_dispatch' && contains(inputs.flight_sources, 'ryanair')) }}
+  check-api-fares:
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 7 * * *') || (github.event_name == 'workflow_dispatch' && (contains(inputs.flight_sources, 'ryanair') || contains(inputs.flight_sources, 'aviasales'))) }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: flight-alerts-state
+      cancel-in-progress: false
 
     steps:
       - name: Checkout repo
@@ -51,18 +56,36 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Run Ryanair fare checker
+      - name: Run Ryanair + Aviasales fare checkers
         env:
-          FLIGHT_SOURCES: ryanair
+          FLIGHT_SOURCES: ryanair,aviasales
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          RYANAIR_ORIGIN_AIRPORTS: ${{ vars.RYANAIR_ORIGIN_AIRPORTS || 'DUB' }}
-          RYANAIR_MARKET: ${{ vars.RYANAIR_MARKET || 'en-ie' }}
-          RYANAIR_SCAN_MONTHS: ${{ vars.RYANAIR_SCAN_MONTHS || '12' }}
+          RYANAIR_ORIGIN_AIRPORTS: ${{ vars.RYANAIR_ORIGIN_AIRPORTS || 'DUB,BFS' }}
+          RYANAIR_DESTINATIONS: ${{ vars.RYANAIR_DESTINATIONS || 'all' }}
+          RYANAIR_SCAN_MONTHS: ${{ vars.RYANAIR_SCAN_MONTHS || '6' }}
           RYANAIR_MAX_RETURN_PRICE: ${{ vars.RYANAIR_MAX_RETURN_PRICE || '100' }}
-          RYANAIR_DIGEST_LIMIT: ${{ vars.RYANAIR_DIGEST_LIMIT || '6' }}
-          RYANAIR_MAX_TRIP_NIGHTS: ${{ vars.RYANAIR_MAX_TRIP_NIGHTS || '7' }}
+          RYANAIR_DIGEST_LIMIT: ${{ vars.RYANAIR_DIGEST_LIMIT || '12' }}
+          RYANAIR_MAX_TRIP_NIGHTS: ${{ vars.RYANAIR_MAX_TRIP_NIGHTS || '3' }}
+          AVIASALES_ORIGIN_AIRPORTS: ${{ vars.AVIASALES_ORIGIN_AIRPORTS || 'DUB,BFS' }}
+          AVIASALES_SCAN_MONTHS: ${{ vars.AVIASALES_SCAN_MONTHS || '6' }}
+          AVIASALES_MAX_RETURN_PRICE: ${{ vars.AVIASALES_MAX_RETURN_PRICE || '100' }}
+          TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
+          STATE_FILE: state/seen_deals.json
+          PRICE_DROP_EUR: ${{ vars.PRICE_DROP_EUR || '5' }}
         run: python main.py
+
+      - name: Persist deal state (dedupe + keepalive)
+        if: ${{ github.event_name == 'schedule' }}
+        run: |
+          mkdir -p state
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > state/last_run.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add state/seen_deals.json state/last_run.txt
+          if git diff --cached --quiet; then
+            echo "No state changes to commit."
+          else
+            git commit -m "chore: update flight deal state [skip ci]"
+            git push
+          fi

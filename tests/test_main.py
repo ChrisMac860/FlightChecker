@@ -1,6 +1,7 @@
 import datetime as dt
 from email.message import EmailMessage
 import os
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -338,6 +339,154 @@ class GmailAlertParserTests(unittest.TestCase):
             ("UNSEEN", "FROM", '"no-reply@sender.skyscanner.com"', "SUBJECT", '"Latest prices for your flights"'),
             fake_imap.search_args,
         )
+
+
+class BroadenedSearchTests(unittest.TestCase):
+    def _routes(self):
+        return [
+            {"departureAirport": {"iataCode": "DUB"},
+             "arrivalAirport": {"iataCode": "BCN", "city": {"name": "Barcelona"}}},
+            {"departureAirport": {"iataCode": "DUB"},
+             "arrivalAirport": {"iataCode": "BUD", "city": {"name": "Budapest"}}},
+        ]
+
+    def test_destination_catalog_all_mode_returns_every_direct_route(self):
+        catalog = main.ryanair_destination_catalog("DUB", self._routes(), "all")
+        self.assertEqual(catalog, {"BCN": "Barcelona", "BUD": "Budapest"})
+
+    def test_destination_catalog_curated_mode_keeps_only_configured(self):
+        catalog = main.ryanair_destination_catalog("DUB", self._routes(), "curated")
+        self.assertEqual(catalog, {"BUD": "Budapest"})
+
+    def test_query_windows_all_months_cover_full_horizon(self):
+        windows = main.ryanair_query_windows(dt.date(2026, 5, 30), 3, month_gated=False)
+        self.assertEqual(len(windows), 3)
+        self.assertEqual(windows[0][0], dt.date(2026, 5, 30))
+        self.assertEqual(windows[1], (dt.date(2026, 6, 1), dt.date(2026, 6, 30)))
+
+    def test_to_eur_normalizes_gbp_and_passes_through_eur(self):
+        self.assertEqual(main.to_eur(100, "EUR"), 100.0)
+        self.assertEqual(main.to_eur(100, "GBP"), 117.0)
+        self.assertEqual(main.to_eur(50, "ZZZ"), 50.0)
+
+    def test_off_season_weekend_is_eligible_when_month_gating_disabled(self):
+        deal = {
+            "destination": "Barcelona",
+            "start_date": dt.date(2026, 1, 9),   # Friday
+            "end_date": dt.date(2026, 1, 11),    # Sunday
+            "price_value": 45.0,
+            "currency": "EUR",
+            "route": "DUB - BCN",
+        }
+        detailed = main.add_filter_details(deal, dt.date(2025, 12, 1), "Barcelona", month_gated=False)
+        self.assertTrue(detailed["eligible"])
+        self.assertEqual(detailed["nights"], 2)
+        self.assertEqual(detailed["days_off"], 1)
+
+    def test_dedupe_keeps_cheapest_trip_per_destination(self):
+        deals = [
+            {"destination": "Budapest", "route": "DUB - BUD", "price_eur": 80.0},
+            {"destination": "Budapest", "route": "DUB - BUD", "price_eur": 50.0},
+            {"destination": "Barcelona", "route": "DUB - BCN", "price_eur": 60.0},
+        ]
+        unique = main.dedupe_cheapest_per_destination(deals)
+        by_dest = {deal["destination"]: deal["price_eur"] for deal in unique}
+        self.assertEqual(by_dest, {"Budapest": 50.0, "Barcelona": 60.0})
+
+
+class AviasalesSourceTests(unittest.TestCase):
+    def _offer(self, price=45.0):
+        return {
+            "origin": "DUB",
+            "destination": "BCN",
+            "price": price,
+            "airline": "VY",
+            "flight_number": 8201,
+            "departure_at": "2026-09-04T18:25:00+03:00",   # Friday
+            "return_at": "2026-09-06T21:00:00+03:00",       # Sunday
+            "transfers": 0,
+            "link": "/search/DUB0409BCN0609",
+            "currency": "eur",
+        }
+
+    def test_aviasales_offer_normalization(self):
+        deal = main.normalize_aviasales_offer(self._offer())
+        self.assertEqual(deal["source"], "aviasales")
+        self.assertEqual(deal["route"], "DUB - BCN")
+        self.assertEqual(deal["destination"], "BCN")
+        self.assertEqual(deal["dates"], "Fri 4 Sep - Sun 6 Sep")
+        self.assertEqual(deal["price"], "EUR 45.00")
+        self.assertEqual(deal["price_eur"], 45.0)
+        self.assertEqual(deal["stops"], "Non-stop")
+        self.assertTrue(deal["url"].startswith("https://www.aviasales.com/search/"))
+        self.assertEqual(deal["dedupe_key"], "aviasales:DUB-BCN:2026-09-04T18:25:00+03:00:2026-09-06T21:00:00+03:00")
+
+    def test_aviasales_offer_normalization_reuses_weekend_filters(self):
+        deal = main.normalize_aviasales_offer(self._offer())
+        detailed = main.add_filter_details(deal, dt.date(2026, 5, 30), deal["destination"], month_gated=False)
+        self.assertTrue(detailed["eligible"])
+        self.assertEqual(detailed["nights"], 2)
+        self.assertEqual(detailed["days_off"], 1)
+
+    def test_aviasales_offer_without_return_is_rejected(self):
+        offer = self._offer()
+        offer["return_at"] = ""
+        with self.assertRaises(ValueError):
+            main.normalize_aviasales_offer(offer)
+
+
+class StateAlertTests(unittest.TestCase):
+    def _deal(self, key, price, end=dt.date(2026, 9, 6)):
+        return {
+            "dedupe_key": key,
+            "destination": key,
+            "route": f"DUB - {key}",
+            "price_eur": price,
+            "start_date": dt.date(2026, 9, 4),
+            "end_date": end,
+        }
+
+    def test_is_fresh_new_then_repeat_then_drop(self):
+        state = {}
+        deal = self._deal("BCN", 50.0)
+        self.assertTrue(main.is_fresh(deal, state, 5.0))             # new
+        main.commit_state([deal], state, dt.date(2026, 5, 30))
+        self.assertFalse(main.is_fresh(deal, state, 5.0))            # same price
+        self.assertFalse(main.is_fresh(self._deal("BCN", 46.0), state, 5.0))  # 4 EUR drop < 5
+        self.assertTrue(main.is_fresh(self._deal("BCN", 44.0), state, 5.0))   # 6 EUR drop >= 5
+
+    def test_prune_state_drops_past_trips(self):
+        state = {
+            "future": {"end_date": "2026-09-06", "last_alerted_price_eur": 50.0},
+            "past": {"end_date": "2026-01-01", "last_alerted_price_eur": 50.0},
+        }
+        pruned = main.prune_state(state, dt.date(2026, 6, 21))
+        self.assertIn("future", pruned)
+        self.assertNotIn("past", pruned)
+
+    def test_select_deals_to_alert_suppresses_repeats_and_surfaces_drops(self):
+        deals = [self._deal("BCN", 60.0), self._deal("BUD", 50.0)]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "seen.json")
+            env = {"STATE_FILE": path, "PRICE_DROP_EUR": "5"}
+            with patch.dict(os.environ, env):
+                first = main.select_deals_to_alert(deals, 10, dry_run=False, today=dt.date(2026, 5, 30))
+                self.assertEqual({d["destination"] for d in first}, {"BCN", "BUD"})
+
+                second = main.select_deals_to_alert(deals, 10, dry_run=False, today=dt.date(2026, 5, 31))
+                self.assertEqual(second, [])
+
+                cheaper = [self._deal("BCN", 60.0), self._deal("BUD", 40.0)]
+                third = main.select_deals_to_alert(cheaper, 10, dry_run=False, today=dt.date(2026, 6, 1))
+                self.assertEqual([d["destination"] for d in third], ["BUD"])
+
+    def test_dry_run_does_not_write_state(self):
+        deals = [self._deal("BCN", 60.0)]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "seen.json")
+            with patch.dict(os.environ, {"STATE_FILE": path}):
+                main.select_deals_to_alert(deals, 10, dry_run=True, today=dt.date(2026, 5, 30))
+            self.assertFalse(os.path.exists(path))
 
 
 class FakeImap:

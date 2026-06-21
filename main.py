@@ -4,8 +4,10 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.parse
 import urllib.request
+import urllib.error
 import email
 import calendar
 import datetime as dt
@@ -184,14 +186,56 @@ KNOWN_ROUTE_PLACES = (
 KNOWN_ROUTE_PLACE_RE = "|".join(re.escape(place) for place in KNOWN_ROUTE_PLACES)
 RYANAIR_ROUTES_URL = "https://services-api.ryanair.com/views/locate/5/routes/en/airport/{origin}"
 RYANAIR_ROUND_TRIP_FARES_URL = "https://www.ryanair.com/api/farfnd/v4/roundTripFares"
-RYANAIR_USER_AGENT = "FlightChecker/1.0"
+RYANAIR_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+)
 RYANAIR_DEFAULT_ORIGIN_AIRPORTS = "DUB"
 RYANAIR_DEFAULT_MARKET = "en-ie"
 RYANAIR_DEFAULT_SCAN_MONTHS = 12
 RYANAIR_DEFAULT_MAX_RETURN_PRICE = 100.0
-RYANAIR_DEFAULT_DIGEST_LIMIT = 6
-RYANAIR_DEFAULT_MAX_TRIP_NIGHTS = 7
-VALID_FLIGHT_SOURCES = {"gmail", "ryanair"}
+RYANAIR_DEFAULT_DIGEST_LIMIT = 12
+RYANAIR_DEFAULT_MAX_TRIP_NIGHTS = 3
+RYANAIR_DEFAULT_DESTINATIONS = "curated"
+RYANAIR_DEFAULT_REQUEST_DELAY = 0.3
+RYANAIR_DEFAULT_MAX_DESTINATIONS = 60
+
+# Per-origin Ryanair market (drives response currency). Falls back to the
+# configured default market for any origin not listed here.
+ORIGIN_MARKETS = {
+    "DUB": "en-ie",
+    "BFS": "en-gb",
+    "BHD": "en-gb",
+}
+
+# Approximate, static FX rates used only to normalise prices to EUR for
+# comparison/ranking across currencies (e.g. GBP fares from Belfast). Display
+# always keeps the fare's native currency. These do not need to be exact.
+FX_TO_EUR = {
+    "EUR": 1.0,
+    "GBP": 1.17,
+    "USD": 0.92,
+    "PLN": 0.23,
+    "DKK": 0.134,
+    "SEK": 0.088,
+    "NOK": 0.086,
+    "CHF": 1.06,
+    "HUF": 0.0026,
+    "CZK": 0.040,
+    "RON": 0.20,
+    "BGN": 0.51,
+}
+
+AVIASALES_PRICES_URL = "https://api.travelpayouts.com/aviasales/v3/prices_for_dates"
+AVIASALES_SEARCH_URL = "https://www.aviasales.com"
+AVIASALES_DEFAULT_CURRENCY = "eur"
+AVIASALES_DEFAULT_SCAN_MONTHS = 6
+AVIASALES_DEFAULT_DIGEST_LIMIT = 12
+
+STATE_DEFAULT_PATH = "state/seen_deals.json"
+PRICE_DROP_DEFAULT_EUR = 5.0
+
+VALID_FLIGHT_SOURCES = {"gmail", "ryanair", "aviasales"}
 GMAIL_FALLBACK_SEARCHES = (
     ("Google Flights sender", ("UNSEEN", "FROM", '"noreply-travel@google.com"')),
     (
@@ -441,7 +485,7 @@ def overlaps_allowed_month(start_date, end_date, allowed_months):
     return False
 
 
-def add_filter_details(deal, context_date, context_text):
+def add_filter_details(deal, context_date, context_text, month_gated=True):
     if isinstance(deal.get("start_date"), dt.date) and isinstance(deal.get("end_date"), dt.date):
         dates = (deal["start_date"], deal["end_date"])
     else:
@@ -454,9 +498,14 @@ def add_filter_details(deal, context_date, context_text):
     start_date, end_date = dates
     nights = (end_date - start_date).days
     days_off = count_days_off(start_date, end_date)
-    destination = destination_from_deal(deal, context_text)
+    destination = deal.get("destination") or destination_from_deal(deal, context_text)
+    if "price_eur" not in deal and "price_value" in deal:
+        deal["price_eur"] = to_eur(deal["price_value"], deal.get("currency", "EUR"))
     allowed_months = DESTINATION_MONTHS.get(destination, set())
-    month_allowed = bool(allowed_months) and overlaps_allowed_month(start_date, end_date, allowed_months)
+    if month_gated:
+        month_allowed = bool(allowed_months) and overlaps_allowed_month(start_date, end_date, allowed_months)
+    else:
+        month_allowed = True
     deal.update({
         "destination": destination,
         "start_date": start_date,
@@ -469,7 +518,7 @@ def add_filter_details(deal, context_date, context_text):
         deal["filter_reason"] = f"{nights} night(s), minimum is {MIN_NIGHTS}"
     elif days_off > MAX_DAYS_OFF:
         deal["filter_reason"] = f"{days_off} day(s) off, maximum is {MAX_DAYS_OFF}"
-    elif not destination:
+    elif month_gated and not destination:
         deal["filter_reason"] = "destination not configured"
     elif not month_allowed:
         deal["filter_reason"] = (
@@ -501,6 +550,25 @@ def get_airport_code(airport):
     if not isinstance(airport, dict):
         return ""
     return (airport.get("iataCode") or airport.get("code") or "").upper()
+
+
+def get_airport_city(airport):
+    if not isinstance(airport, dict):
+        return ""
+    city = airport.get("city")
+    if isinstance(city, dict) and city.get("name"):
+        return city["name"]
+    if isinstance(city, str) and city:
+        return city
+    return airport.get("name") or get_airport_code(airport)
+
+
+def to_eur(value, currency):
+    """Normalise a price to EUR using static approximate rates for comparison."""
+    rate = FX_TO_EUR.get((currency or "EUR").upper())
+    if rate is None:
+        return float(value)
+    return round(float(value) * rate, 2)
 
 
 def filter_ryanair_destination_airports(origin, routes, destination_airports):
@@ -537,9 +605,11 @@ def normalize_ryanair_fare(fare):
     summary_price = (fare.get("summary") or {}).get("price") or {}
     origin_code = get_airport_code(outbound.get("departureAirport"))
     destination_code = get_airport_code(outbound.get("arrivalAirport"))
+    destination_city = get_airport_city(outbound.get("arrivalAirport"))
     outbound_departure = parse_ryanair_datetime(outbound.get("departureDate"))
     inbound_departure = parse_ryanair_datetime(inbound.get("departureDate"))
     price_value = float(summary_price["value"])
+    currency = summary_price.get("currencyCode") or "EUR"
     outbound_flight = outbound.get("flightNumber") or "FR"
     inbound_flight = inbound.get("flightNumber") or "FR"
 
@@ -549,9 +619,16 @@ def normalize_ryanair_fare(fare):
             f"ryanair:{origin_code}-{destination_code}:"
             f"{outbound.get('departureDate')}:{inbound.get('departureDate')}:{price_value:.2f}"
         ),
+        "dedupe_key": (
+            f"ryanair:{origin_code}-{destination_code}:"
+            f"{outbound.get('departureDate')}:{inbound.get('departureDate')}"
+        ),
         "dates": f"{format_ryanair_date(outbound_departure.date())} - {format_ryanair_date(inbound_departure.date())}",
         "price": format_ryanair_price(summary_price),
         "price_value": price_value,
+        "price_eur": to_eur(price_value, currency),
+        "currency": currency,
+        "destination": destination_city or None,
         "airline": "Ryanair",
         "stops": "Non-stop",
         "route": f"{origin_code} - {destination_code}",
@@ -566,47 +643,108 @@ def add_months(year, month, offset):
     return month_index // 12, month_index % 12 + 1
 
 
-def ryanair_query_windows(today, scan_months, destination):
-    allowed_months = DESTINATION_MONTHS.get(destination, set())
+def ryanair_query_windows(today, scan_months, destination=None, month_gated=True):
+    allowed_months = DESTINATION_MONTHS.get(destination, set()) if month_gated else None
     windows = []
     for offset in range(scan_months):
         year, month = add_months(today.year, today.month, offset)
-        if month not in allowed_months:
+        if allowed_months is not None and month not in allowed_months:
             continue
         month_start = dt.date(year, month, 1)
         month_end = dt.date(year, month, calendar.monthrange(year, month)[1])
-        outbound_from = max(today, month_start - dt.timedelta(days=MONTH_OVERFLOW_DAYS))
-        outbound_to = month_end + dt.timedelta(days=MONTH_OVERFLOW_DAYS)
+        if allowed_months is not None:
+            outbound_from = max(today, month_start - dt.timedelta(days=MONTH_OVERFLOW_DAYS))
+            outbound_to = month_end + dt.timedelta(days=MONTH_OVERFLOW_DAYS)
+        else:
+            outbound_from = max(today, month_start)
+            outbound_to = month_end
         if outbound_from <= outbound_to:
             windows.append((outbound_from, outbound_to))
     return windows
 
 
-def fetch_json(url, params=None, timeout=30):
+def ryanair_destination_catalog(origin, routes, mode):
+    """Map of arrival IATA code -> display city for a Ryanair origin.
+
+    mode 'curated' keeps only the configured DESTINATION_AIRPORTS; mode 'all'
+    returns every direct route so the search covers the whole network."""
+    origin = origin.upper()
+    catalog = {}
+    for route in routes:
+        departure_code = get_airport_code(route.get("departureAirport"))
+        if departure_code and departure_code != origin:
+            continue
+        arrival = route.get("arrivalAirport")
+        arrival_code = get_airport_code(arrival)
+        if not arrival_code:
+            continue
+        if mode == "all":
+            catalog[arrival_code] = get_airport_city(arrival) or arrival_code
+        elif arrival_code in DESTINATION_AIRPORTS:
+            catalog[arrival_code] = DESTINATION_AIRPORTS[arrival_code]
+    return catalog
+
+
+def fetch_json(url, params=None, timeout=30, headers=None):
     if params:
         url = f"{url}?{urllib.parse.urlencode(params)}"
-    request = urllib.request.Request(
-        url,
-        headers={
-            "Accept": "application/json, text/plain, */*",
-            "User-Agent": RYANAIR_USER_AGENT,
-        },
-    )
+    request_headers = {
+        "Accept": "application/json, text/plain, */*",
+        "User-Agent": RYANAIR_USER_AGENT,
+    }
+    if headers:
+        request_headers.update(headers)
+    request = urllib.request.Request(url, headers=request_headers)
     with urllib.request.urlopen(request, timeout=timeout) as response:
         return json.load(response)
 
 
+def fetch_json_with_retry(url, params=None, timeout=30, headers=None, retries=3, backoff=1.5):
+    """fetch_json with retries/backoff for transient rate-limit (429) and
+    forbidden (403, sometimes returned to datacenter IPs) responses."""
+    attempt = 0
+    while True:
+        try:
+            return fetch_json(url, params=params, timeout=timeout, headers=headers)
+        except urllib.error.HTTPError as exc:
+            attempt += 1
+            if exc.code not in (403, 429, 500, 502, 503, 504) or attempt > retries:
+                raise
+            time.sleep(backoff ** attempt)
+        except urllib.error.URLError:
+            attempt += 1
+            if attempt > retries:
+                raise
+            time.sleep(backoff ** attempt)
+
+
+def ryanair_request_headers():
+    """Browser-like headers Ryanair's fare API expects from non-browser clients.
+    The fr-correlation-id cookie just needs to be present; client-version is
+    optional and only set when RYANAIR_CLIENT_VERSION is configured."""
+    headers = {
+        "Accept-Language": "en-GB,en;q=0.9",
+        "Origin": "https://www.ryanair.com",
+        "Referer": "https://www.ryanair.com/",
+        "Cookie": "fr-correlation-id=flightchecker",
+    }
+    client_version = get_env("RYANAIR_CLIENT_VERSION", required=False, default="")
+    if client_version:
+        headers["client-version"] = client_version
+    return headers
+
+
 def fetch_ryanair_routes(origin):
     url = RYANAIR_ROUTES_URL.format(origin=urllib.parse.quote(origin.upper()))
-    data = fetch_json(url)
+    data = fetch_json_with_retry(url, headers=ryanair_request_headers())
     return data if isinstance(data, list) else []
 
 
-def build_ryanair_fare_params(origin, destination_code, outbound_from, outbound_to, config):
+def build_ryanair_fare_params(origin, destination_code, outbound_from, outbound_to, config, market=None):
     return {
         "departureAirportIataCode": origin,
         "arrivalAirportIataCode": destination_code,
-        "market": config["market"],
+        "market": market or config["market"],
         "adultPaxCount": "1",
         "searchMode": "ALL",
         "outboundDepartureDateFrom": outbound_from.isoformat(),
@@ -624,7 +762,9 @@ def build_ryanair_fare_params(origin, destination_code, outbound_from, outbound_
 
 
 def fetch_ryanair_round_trip_fares(params):
-    data = fetch_json(RYANAIR_ROUND_TRIP_FARES_URL, params=params)
+    data = fetch_json_with_retry(
+        RYANAIR_ROUND_TRIP_FARES_URL, params=params, headers=ryanair_request_headers()
+    )
     if not isinstance(data, dict):
         return []
     return data.get("fares") or []
@@ -638,13 +778,22 @@ def get_ryanair_config():
     if not origins:
         fail("RYANAIR_ORIGIN_AIRPORTS must include at least one airport code")
 
+    destinations = get_env(
+        "RYANAIR_DESTINATIONS", required=False, default=RYANAIR_DEFAULT_DESTINATIONS
+    ).lower()
+    if destinations not in {"curated", "all"}:
+        fail("RYANAIR_DESTINATIONS must be 'curated' or 'all'")
+
     config = {
         "origins": origins,
         "market": get_env("RYANAIR_MARKET", required=False, default=RYANAIR_DEFAULT_MARKET),
+        "destinations": destinations,
         "scan_months": get_int_env("RYANAIR_SCAN_MONTHS", RYANAIR_DEFAULT_SCAN_MONTHS),
         "max_return_price": get_float_env("RYANAIR_MAX_RETURN_PRICE", RYANAIR_DEFAULT_MAX_RETURN_PRICE),
         "digest_limit": get_int_env("RYANAIR_DIGEST_LIMIT", RYANAIR_DEFAULT_DIGEST_LIMIT),
         "max_trip_nights": get_int_env("RYANAIR_MAX_TRIP_NIGHTS", RYANAIR_DEFAULT_MAX_TRIP_NIGHTS),
+        "max_destinations": get_int_env("RYANAIR_MAX_DESTINATIONS", RYANAIR_DEFAULT_MAX_DESTINATIONS),
+        "request_delay": get_float_env("RYANAIR_REQUEST_DELAY", RYANAIR_DEFAULT_REQUEST_DELAY),
     }
     if config["scan_months"] < 1:
         fail("RYANAIR_SCAN_MONTHS must be at least 1")
@@ -652,33 +801,45 @@ def get_ryanair_config():
         fail("RYANAIR_DIGEST_LIMIT must be at least 1")
     if config["max_trip_nights"] < MIN_NIGHTS:
         fail(f"RYANAIR_MAX_TRIP_NIGHTS must be at least {MIN_NIGHTS}")
+    if config["max_destinations"] < 1:
+        fail("RYANAIR_MAX_DESTINATIONS must be at least 1")
     return config
 
 
 def collect_ryanair_deals(config, today=None):
     today = today or dt.date.today()
+    month_gated = config["destinations"] == "curated"
     deals_by_key = {}
     for origin in config["origins"]:
+        market = ORIGIN_MARKETS.get(origin.upper(), config["market"])
         try:
             routes = fetch_ryanair_routes(origin)
         except Exception as exc:
             print(f"Warning: could not fetch Ryanair routes for {origin}: {exc}")
             continue
 
-        destination_codes = filter_ryanair_destination_airports(origin, routes, DESTINATION_AIRPORTS)
-        if not destination_codes:
-            print(f"No configured Ryanair destinations are available from {origin}.")
+        catalog = ryanair_destination_catalog(origin, routes, config["destinations"])
+        if not catalog:
+            print(f"No Ryanair destinations are available from {origin}.")
             continue
 
+        destination_codes = sorted(catalog)[: config["max_destinations"]]
         for destination_code in destination_codes:
-            destination = DESTINATION_AIRPORTS[destination_code]
-            for outbound_from, outbound_to in ryanair_query_windows(today, config["scan_months"], destination):
-                params = build_ryanair_fare_params(origin, destination_code, outbound_from, outbound_to, config)
+            destination = catalog[destination_code]
+            for outbound_from, outbound_to in ryanair_query_windows(
+                today, config["scan_months"], destination, month_gated=month_gated
+            ):
+                params = build_ryanair_fare_params(
+                    origin, destination_code, outbound_from, outbound_to, config, market=market
+                )
                 try:
                     fares = fetch_ryanair_round_trip_fares(params)
                 except Exception as exc:
                     print(f"Warning: could not fetch Ryanair fares {origin}-{destination_code}: {exc}")
                     continue
+                finally:
+                    if config["request_delay"] > 0:
+                        time.sleep(config["request_delay"])
 
                 for fare in fares:
                     try:
@@ -686,29 +847,57 @@ def collect_ryanair_deals(config, today=None):
                     except (KeyError, TypeError, ValueError) as exc:
                         print(f"Warning: skipping malformed Ryanair fare {origin}-{destination_code}: {exc}")
                         continue
-                    detailed = add_filter_details(deal, today, f"{destination} {today.year}")
+                    detailed = add_filter_details(
+                        deal, today, f"{destination} {today.year}", month_gated=month_gated
+                    )
                     if not detailed["eligible"]:
                         continue
-                    if detailed["price_value"] > config["max_return_price"]:
+                    if detailed["price_eur"] > config["max_return_price"]:
                         continue
                     deals_by_key[detailed["source_key"]] = detailed
 
-    return sorted(deals_by_key.values(), key=lambda deal: (deal["price_value"], deal["start_date"], deal["route"]))
+    return sorted(
+        deals_by_key.values(),
+        key=lambda deal: (deal["price_eur"], deal["start_date"], deal["route"]),
+    )
+
+
+def deal_price_eur(deal):
+    return deal.get("price_eur", deal.get("price_value", 0.0))
+
+
+def deal_group_key(deal):
+    return deal.get("destination") or deal.get("route") or deal.get("dates")
+
+
+def dedupe_cheapest_per_destination(deals):
+    """Keep only the single cheapest trip per destination so the digest shows
+    breadth (many cities to visit) rather than several fares to the same place."""
+    best = {}
+    for deal in deals:
+        key = deal_group_key(deal)
+        if key not in best or deal_price_eur(deal) < deal_price_eur(best[key]):
+            best[key] = deal
+    return list(best.values())
+
+
+def build_digest(deals, title, limit):
+    unique = dedupe_cheapest_per_destination(deals)
+    selected = sorted(
+        unique, key=lambda deal: (deal_price_eur(deal), deal.get("start_date") or dt.date.max)
+    )[:limit]
+    if not selected:
+        return f"{title}\nSummary: No matching fares found."
+
+    message = f"{title}\nSummary: Showing {len(selected)} cheapest matching fare(s)"
+    if len(unique) > len(selected):
+        message += f" from {len(unique)} destinations"
+    message += "\n\nDeals:\n" + "\n".join(format_deal(deal) for deal in selected)
+    return message
 
 
 def build_ryanair_digest(deals, limit=RYANAIR_DEFAULT_DIGEST_LIMIT):
-    selected = sorted(deals, key=lambda deal: (deal["price_value"], deal.get("start_date") or dt.date.max))[:limit]
-    if not selected:
-        return "Ryanair Fare Digest\nSummary: No matching Ryanair fares found."
-
-    message = (
-        "Ryanair Fare Digest\n"
-        f"Summary: Showing {len(selected)} cheapest matching fare(s)"
-    )
-    if len(deals) > len(selected):
-        message += f" from {len(deals)} total"
-    message += "\n\nDeals:\n" + "\n".join(format_deal(deal) for deal in selected)
-    return message
+    return build_digest(deals, "Ryanair Fare Digest", limit)
 
 
 def parse_google_flight_deals(body):
@@ -820,16 +1009,19 @@ def parse_alert(subject, body):
 
 
 def format_deal(deal):
-    route = deal["route"].replace(" ", "").replace("\u2013", "-")
+    route = (deal.get("route") or "").replace(" ", "").replace("\u2013", "-")
     trip_details = ""
     if "nights" in deal and "days_off" in deal:
         night_label = "night" if deal["nights"] == 1 else "nights"
         day_off_label = "day off" if deal["days_off"] == 1 else "days off"
         trip_details = f" ({deal['nights']} {night_label}, {deal['days_off']} {day_off_label})"
-    return (
+    line = (
         f"- {deal['dates']}: {deal['price']}, {deal['airline']}, "
         f"{deal['stops']}, {route}, {deal['duration']}{trip_details}"
     )
+    if deal.get("url"):
+        line += f"\n  {deal['url']}"
+    return line
 
 
 def build_alert_message(subject, from_header, gmail_label, body, deals):
@@ -1031,12 +1223,95 @@ def run_gmail_source(dry_run=False):
     print("Done.")
 
 
+def load_state(path):
+    if not path or not os.path.exists(path):
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def save_state(path, state):
+    if not path:
+        return
+    directory = os.path.dirname(path)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(state, handle, indent=2, sort_keys=True)
+
+
+def prune_state(state, today):
+    """Drop entries whose travel dates have already passed."""
+    today_iso = today.isoformat()
+    return {key: entry for key, entry in state.items() if entry.get("end_date", "") >= today_iso}
+
+
+def state_key(deal):
+    return deal.get("dedupe_key") or deal.get("source_key")
+
+
+def is_fresh(deal, state, drop_threshold_eur):
+    """A deal is alert-worthy if it's new, or its EUR price dropped by at least
+    drop_threshold_eur versus the last price we alerted on."""
+    key = state_key(deal)
+    if not key:
+        return True
+    entry = state.get(key)
+    if entry is None:
+        return True
+    price = round(deal_price_eur(deal), 2)
+    last_alerted = entry.get("last_alerted_price_eur", price)
+    return (last_alerted - price) >= drop_threshold_eur
+
+
+def commit_state(deals, state, today):
+    for deal in deals:
+        key = state_key(deal)
+        if not key:
+            continue
+        entry = state.get(key, {})
+        end_date = deal.get("end_date")
+        state[key] = {
+            "first_seen": entry.get("first_seen", today.isoformat()),
+            "last_alerted_price_eur": round(deal_price_eur(deal), 2),
+            "end_date": end_date.isoformat() if isinstance(end_date, dt.date) else entry.get("end_date", ""),
+        }
+
+
+def select_deals_to_alert(deals, limit, dry_run, today=None):
+    """Dedupe to the cheapest trip per destination, rank by price, then keep only
+    the new / price-dropped ones (using persisted state) up to the digest limit.
+    State is saved only on real runs so dry runs and tests never mutate it."""
+    today = today or dt.date.today()
+    ranked = sorted(
+        dedupe_cheapest_per_destination(deals),
+        key=lambda deal: (deal_price_eur(deal), deal.get("start_date") or dt.date.max),
+    )
+
+    path = get_env("STATE_FILE", required=False, default=STATE_DEFAULT_PATH)
+    if not path:
+        return ranked[:limit]
+
+    threshold = get_float_env("PRICE_DROP_EUR", PRICE_DROP_DEFAULT_EUR)
+    state = prune_state(load_state(path), today)
+    fresh = [deal for deal in ranked if is_fresh(deal, state, threshold)]
+    shown = fresh[:limit]
+    if not dry_run:
+        commit_state(shown, state, today)
+        save_state(path, state)
+    return shown
+
+
 def run_ryanair_source(dry_run=False):
     config = get_ryanair_config()
     print(
         "Checking Ryanair fares: "
         f"origins={', '.join(config['origins'])}, "
-        f"market={config['market']}, "
+        f"destinations={config['destinations']}, "
         f"scan_months={config['scan_months']}, "
         f"max_return_price={config['max_return_price']:g}"
     )
@@ -1045,7 +1320,12 @@ def run_ryanair_source(dry_run=False):
         print("No Ryanair fares matched the configured filters.")
         return
 
-    message_text = build_ryanair_digest(deals, limit=config["digest_limit"])
+    shown = select_deals_to_alert(deals, config["digest_limit"], dry_run)
+    if not shown:
+        print("No new or cheaper Ryanair fares since the last run.")
+        return
+
+    message_text = build_digest(shown, "Ryanair Fare Digest", config["digest_limit"])
     if dry_run:
         print("DRY RUN: would send Ryanair Telegram digest:")
         print(message_text)
@@ -1053,7 +1333,165 @@ def run_ryanair_source(dry_run=False):
 
     telegram_token = get_env("TELEGRAM_BOT_TOKEN")
     telegram_chat_id = get_env("TELEGRAM_CHAT_ID")
-    print(f"Sending Ryanair Telegram digest with {min(len(deals), config['digest_limit'])} deal(s)...")
+    print(f"Sending Ryanair Telegram digest with {len(shown)} deal(s)...")
+    send_telegram_message(telegram_token, telegram_chat_id, message_text)
+    print("Done.")
+
+
+def get_aviasales_config():
+    origins = parse_csv(
+        get_env("AVIASALES_ORIGIN_AIRPORTS", required=False, default=RYANAIR_DEFAULT_ORIGIN_AIRPORTS),
+        uppercase=True,
+    )
+    if not origins:
+        fail("AVIASALES_ORIGIN_AIRPORTS must include at least one airport code")
+
+    config = {
+        "token": get_env("TRAVELPAYOUTS_TOKEN"),
+        "origins": origins,
+        "currency": get_env("AVIASALES_CURRENCY", required=False, default=AVIASALES_DEFAULT_CURRENCY).lower(),
+        "market": get_env("AVIASALES_MARKET", required=False, default="ie").lower(),
+        "scan_months": get_int_env("AVIASALES_SCAN_MONTHS", AVIASALES_DEFAULT_SCAN_MONTHS),
+        "max_return_price": get_float_env("AVIASALES_MAX_RETURN_PRICE", RYANAIR_DEFAULT_MAX_RETURN_PRICE),
+        "digest_limit": get_int_env("AVIASALES_DIGEST_LIMIT", AVIASALES_DEFAULT_DIGEST_LIMIT),
+        "direct_only": get_bool_env("AVIASALES_DIRECT_ONLY", default=True),
+    }
+    if config["scan_months"] < 1:
+        fail("AVIASALES_SCAN_MONTHS must be at least 1")
+    if config["digest_limit"] < 1:
+        fail("AVIASALES_DIGEST_LIMIT must be at least 1")
+    return config
+
+
+def aviasales_query_months(today, scan_months):
+    months = []
+    for offset in range(scan_months):
+        year, month = add_months(today.year, today.month, offset)
+        months.append(f"{year:04d}-{month:02d}")
+    return months
+
+
+def normalize_aviasales_offer(item):
+    if not item.get("return_at"):
+        raise ValueError("missing Aviasales return date")
+    origin_code = (item.get("origin") or "").upper()
+    destination_code = (item.get("destination") or "").upper()
+    start_date = dt.datetime.fromisoformat(item["departure_at"]).date()
+    end_date = dt.datetime.fromisoformat(item["return_at"]).date()
+    price_value = float(item["price"])
+    currency = (item.get("currency") or "EUR").upper()
+    airline = item.get("airline") or "?"
+    transfers = item.get("transfers") or 0
+    stops = "Non-stop" if not transfers else f"{transfers} stop(s)"
+    link = item.get("link") or ""
+    url = f"{AVIASALES_SEARCH_URL}{link}" if link.startswith("/") else (link or None)
+
+    return {
+        "source": "aviasales",
+        "source_key": (
+            f"aviasales:{origin_code}-{destination_code}:"
+            f"{item.get('departure_at')}:{item.get('return_at')}:{price_value:.2f}"
+        ),
+        "dedupe_key": (
+            f"aviasales:{origin_code}-{destination_code}:"
+            f"{item.get('departure_at')}:{item.get('return_at')}"
+        ),
+        "dates": f"{format_ryanair_date(start_date)} - {format_ryanair_date(end_date)}",
+        "price": f"{currency} {price_value:.2f}",
+        "price_value": price_value,
+        "price_eur": to_eur(price_value, currency),
+        "currency": currency,
+        "destination": DESTINATION_AIRPORTS.get(destination_code) or destination_code,
+        "airline": airline,
+        "stops": stops,
+        "route": f"{origin_code} - {destination_code}",
+        "duration": f"flight {item.get('flight_number', '')}".strip(),
+        "url": url,
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+
+
+def fetch_aviasales_offers(origin, month, config):
+    params = {
+        "origin": origin,
+        "departure_at": month,
+        "one_way": "false",
+        "currency": config["currency"],
+        "market": config["market"],
+        "sorting": "price",
+        "limit": "1000",
+    }
+    if config["direct_only"]:
+        params["direct"] = "true"
+    data = fetch_json_with_retry(
+        AVIASALES_PRICES_URL, params=params, headers={"X-Access-Token": config["token"]}
+    )
+    if not isinstance(data, dict):
+        return []
+    return data.get("data") or []
+
+
+def collect_aviasales_deals(config, today=None):
+    today = today or dt.date.today()
+    deals_by_key = {}
+    for origin in config["origins"]:
+        for month in aviasales_query_months(today, config["scan_months"]):
+            try:
+                offers = fetch_aviasales_offers(origin, month, config)
+            except Exception as exc:
+                print(f"Warning: could not fetch Aviasales offers {origin} {month}: {exc}")
+                continue
+
+            for item in offers:
+                try:
+                    deal = normalize_aviasales_offer(item)
+                except (KeyError, TypeError, ValueError) as exc:
+                    print(f"Warning: skipping malformed Aviasales offer: {exc}")
+                    continue
+                if deal["start_date"] < today:
+                    continue
+                detailed = add_filter_details(deal, today, deal["destination"] or "", month_gated=False)
+                if not detailed["eligible"]:
+                    continue
+                if detailed["price_eur"] > config["max_return_price"]:
+                    continue
+                deals_by_key[detailed["source_key"]] = detailed
+
+    return sorted(
+        deals_by_key.values(),
+        key=lambda deal: (deal["price_eur"], deal["start_date"], deal["route"]),
+    )
+
+
+def run_aviasales_source(dry_run=False):
+    config = get_aviasales_config()
+    print(
+        "Checking Aviasales fares: "
+        f"origins={', '.join(config['origins'])}, "
+        f"currency={config['currency']}, "
+        f"scan_months={config['scan_months']}, "
+        f"max_return_price={config['max_return_price']:g}"
+    )
+    deals = collect_aviasales_deals(config)
+    if not deals:
+        print("No Aviasales fares matched the configured filters.")
+        return
+
+    shown = select_deals_to_alert(deals, config["digest_limit"], dry_run)
+    if not shown:
+        print("No new or cheaper Aviasales fares since the last run.")
+        return
+
+    message_text = build_digest(shown, "Aviasales Fare Digest", config["digest_limit"])
+    if dry_run:
+        print("DRY RUN: would send Aviasales Telegram digest:")
+        print(message_text)
+        return
+
+    telegram_token = get_env("TELEGRAM_BOT_TOKEN")
+    telegram_chat_id = get_env("TELEGRAM_CHAT_ID")
+    print(f"Sending Aviasales Telegram digest with {len(shown)} deal(s)...")
     send_telegram_message(telegram_token, telegram_chat_id, message_text)
     print("Done.")
 
@@ -1066,6 +1504,8 @@ def run_configured_sources():
             run_gmail_source(dry_run=dry_run)
         elif source == "ryanair":
             run_ryanair_source(dry_run=dry_run)
+        elif source == "aviasales":
+            run_aviasales_source(dry_run=dry_run)
 
 
 def main():
