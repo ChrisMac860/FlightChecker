@@ -9,10 +9,17 @@ Everything runs for free: make the repository **public** so GitHub Actions minut
 - **Gmail source** runs every 15 minutes for Google Flights and Skyscanner email alerts.
 - **Ryanair + Aviasales sources** run daily at 07:00 UTC.
 - `main.py` selects sources from `FLIGHT_SOURCES`.
-- Gmail connects through IMAP, parses unread Google Flights and Skyscanner messages, sends matching Telegram alerts, and marks processed messages as read.
-- Ryanair discovers direct routes from each origin airport (all 120+ routes from Dublin in `all` mode), queries round-trip fares, applies the weekend trip filters, and sends one compact Telegram digest with the cheapest trip per destination.
+- Gmail connects through IMAP, parses unread Google Flights and Skyscanner messages, sends matching Telegram alerts, and marks processed messages read + tags them with a processed label (so a future parser fix can recover anything it consumed).
+- Ryanair queries the round-trip fare finder **once per origin per month window with no fixed destination**, so a single call returns the cheapest fares to every reachable city. This replaced the old per-destination fan-out (hundreds of calls/run that also silently capped coverage to the alphabetically-first destinations). It then applies the weekend trip filters and sends one compact Telegram digest with the cheapest trip per destination.
 - Aviasales (Travelpayouts) queries cached cheapest round-trip prices across many airlines (Aer Lingus, Wizz, easyJet, Vueling…) for breadth Ryanair's own API misses.
-- The API sources persist a small state file (`state/seen_deals.json`) so you are only alerted about **new** or **price-dropped** trips, never the same digest twice. The daily state commit also keeps the repo active so GitHub does not auto-disable the scheduled workflow after 60 days.
+- The API sources persist a small state file (`state/seen_deals.json`) so you are only alerted about **new** or **price-dropped** trips, never the same digest twice. De-duplication is **source-agnostic** (a trip found by both Ryanair and Aviasales alerts once) and state is committed **only after a Telegram send succeeds**, so a failed delivery never suppresses a future re-alert. The daily commit also keeps the repo active so GitHub does not auto-disable the scheduled workflow after 60 days.
+- Every eligible deal from every source is also logged to `docs/deals.json`, which powers the **Eitiltí Saora** web page (see below). Deals are upserted by a source-agnostic identity: re-seeing the same trip refreshes it in place (timestamp/price, cheapest kept) instead of duplicating, and past trips are pruned.
+
+## Web page (Eitiltí Saora)
+
+A minimalist GitHub Pages site in [`docs/`](docs/) lists the current cheap weekend flights with live search, filtering (origin, source, max price, direct-only) and sorting (cheapest / soonest / recently found). It reads `docs/deals.json`, which the scheduled workflow keeps up to date.
+
+To publish it: **Settings → Pages → Build and deployment → Deploy from a branch → `main` / `/docs`**. The page is then served at `https://<user>.github.io/<repo>/`. The hero photo lives at `docs/assets/Airplane.jpg` — drop in your own to change it.
 
 ## Sources
 
@@ -52,7 +59,6 @@ Optional repository variables (with their defaults):
 - `RYANAIR_MAX_RETURN_PRICE` — `100` (EUR)
 - `RYANAIR_DIGEST_LIMIT` — `12`
 - `RYANAIR_MAX_TRIP_NIGHTS` — `3`
-- `RYANAIR_MAX_DESTINATIONS` — `60` (cap on routes scanned per origin per run)
 - `RYANAIR_REQUEST_DELAY` — `0.3` (seconds between fare calls, to stay polite)
 - `RYANAIR_CLIENT_VERSION` — unset (optional; set if Ryanair starts rejecting requests)
 - `AVIASALES_ORIGIN_AIRPORTS` — `DUB,BFS`
@@ -61,6 +67,8 @@ Optional repository variables (with their defaults):
 - `AVIASALES_DIRECT_ONLY` — `true`
 - `PRICE_DROP_EUR` — `5` (minimum EUR drop before re-alerting a known trip)
 - `STATE_FILE` — `state/seen_deals.json` (set empty to disable dedupe/state)
+- `DEALS_LOG_FILE` — `docs/deals.json` (the public log powering the web page; set empty to disable)
+- `GMAIL_PROCESSED_LABEL` — `FlightChecker/Processed` (Gmail label applied to handled messages)
 
 For Gmail, confirm the account has 2-Step Verification enabled, IMAP enabled, and the `Flight alerts` label set to "Show in IMAP".
 

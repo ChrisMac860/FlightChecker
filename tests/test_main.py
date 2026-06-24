@@ -1,5 +1,6 @@
 import datetime as dt
 from email.message import EmailMessage
+import json
 import os
 import tempfile
 import unittest
@@ -295,13 +296,17 @@ class GmailAlertParserTests(unittest.TestCase):
             "GMAIL_LABEL": "Holidays/Flight alerts",
             "TELEGRAM_BOT_TOKEN": "telegram-token",
             "TELEGRAM_CHAT_ID": "telegram-chat",
+            "DEALS_LOG_FILE": "",
         }
         with patch.dict(os.environ, env, clear=True):
             with patch.object(main, "connect_to_gmail", return_value=fake_imap):
                 with patch.object(main, "send_telegram_message", side_effect=AssertionError("should not notify")):
                     main.run_gmail_source()
 
-        self.assertEqual(fake_imap.stored_flags, [(b"1", "+FLAGS", "\\Seen")])
+        # The message is marked read AND tagged with the processed label so a
+        # future parser fix can recover messages we consumed without notifying.
+        self.assertIn((b"1", "+FLAGS", "\\Seen"), fake_imap.stored_flags)
+        self.assertIn((b"1", "+X-GM-LABELS", '"FlightChecker/Processed"'), fake_imap.stored_flags)
         self.assertTrue(fake_imap.logged_out)
 
     def test_gmail_source_checks_known_alert_sender_fallbacks_after_empty_label(self):
@@ -322,6 +327,7 @@ class GmailAlertParserTests(unittest.TestCase):
             "GMAIL_LABEL": "Holidays/Flight alerts",
             "TELEGRAM_BOT_TOKEN": "telegram-token",
             "TELEGRAM_CHAT_ID": "telegram-chat",
+            "DEALS_LOG_FILE": "",
         }
         with patch.dict(os.environ, env, clear=True):
             with patch.object(main, "connect_to_gmail", return_value=fake_imap):
@@ -419,7 +425,7 @@ class AviasalesSourceTests(unittest.TestCase):
         self.assertEqual(deal["price_eur"], 45.0)
         self.assertEqual(deal["stops"], "Non-stop")
         self.assertTrue(deal["url"].startswith("https://www.aviasales.com/search/"))
-        self.assertEqual(deal["dedupe_key"], "aviasales:DUB-BCN:2026-09-04T18:25:00+03:00:2026-09-06T21:00:00+03:00")
+        self.assertEqual(deal["dedupe_key"], "DUB-BCN:2026-09-04:2026-09-06")
 
     def test_aviasales_offer_normalization_reuses_weekend_filters(self):
         deal = main.normalize_aviasales_offer(self._offer())
@@ -464,29 +470,192 @@ class StateAlertTests(unittest.TestCase):
         self.assertIn("future", pruned)
         self.assertNotIn("past", pruned)
 
-    def test_select_deals_to_alert_suppresses_repeats_and_surfaces_drops(self):
+    def test_alert_state_suppresses_repeats_and_surfaces_drops(self):
         deals = [self._deal("BCN", 60.0), self._deal("BUD", 50.0)]
         with tempfile.TemporaryDirectory() as tmp:
             path = os.path.join(tmp, "seen.json")
             env = {"STATE_FILE": path, "PRICE_DROP_EUR": "5"}
             with patch.dict(os.environ, env):
-                first = main.select_deals_to_alert(deals, 10, dry_run=False, today=dt.date(2026, 5, 30))
+                today = dt.date(2026, 5, 30)
+                p, state, thr = main.open_alert_state(today)
+                first = main.select_fresh_deals(deals, 10, state, thr)
                 self.assertEqual({d["destination"] for d in first}, {"BCN", "BUD"})
+                main.commit_alert_state(p, state, first, today)
 
-                second = main.select_deals_to_alert(deals, 10, dry_run=False, today=dt.date(2026, 5, 31))
+                today = dt.date(2026, 5, 31)
+                p, state, thr = main.open_alert_state(today)
+                second = main.select_fresh_deals(deals, 10, state, thr)
                 self.assertEqual(second, [])
 
+                today = dt.date(2026, 6, 1)
                 cheaper = [self._deal("BCN", 60.0), self._deal("BUD", 40.0)]
-                third = main.select_deals_to_alert(cheaper, 10, dry_run=False, today=dt.date(2026, 6, 1))
+                p, state, thr = main.open_alert_state(today)
+                third = main.select_fresh_deals(cheaper, 10, state, thr)
                 self.assertEqual([d["destination"] for d in third], ["BUD"])
+                main.commit_alert_state(p, state, third, today)
 
-    def test_dry_run_does_not_write_state(self):
+    def test_select_fresh_deals_does_not_persist_state(self):
+        # Selection must be side-effect-free: only commit_alert_state writes, so a
+        # failed Telegram send (which skips the commit) never suppresses a future
+        # re-alert of the same trip.
         deals = [self._deal("BCN", 60.0)]
         with tempfile.TemporaryDirectory() as tmp:
             path = os.path.join(tmp, "seen.json")
             with patch.dict(os.environ, {"STATE_FILE": path}):
-                main.select_deals_to_alert(deals, 10, dry_run=True, today=dt.date(2026, 5, 30))
+                today = dt.date(2026, 5, 30)
+                p, state, thr = main.open_alert_state(today)
+                main.select_fresh_deals(deals, 10, state, thr)
             self.assertFalse(os.path.exists(path))
+
+    def test_cross_source_identity_dedupes_same_trip(self):
+        # Ryanair and Aviasales for the same route+dates share a date-based,
+        # source-agnostic dedupe key, so the second source is suppressed once the
+        # first has been alerted and committed.
+        ryanair = {
+            "dedupe_key": "DUB-BCN:2026-09-04:2026-09-06",
+            "source": "ryanair", "destination": "Barcelona", "route": "DUB - BCN",
+            "price_eur": 45.0, "start_date": dt.date(2026, 9, 4), "end_date": dt.date(2026, 9, 6),
+        }
+        aviasales = dict(ryanair, source="aviasales", price_eur=47.0)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "seen.json")
+            with patch.dict(os.environ, {"STATE_FILE": path, "PRICE_DROP_EUR": "5"}):
+                today = dt.date(2026, 5, 30)
+                p, state, thr = main.open_alert_state(today)
+                first = main.select_fresh_deals([ryanair], 10, state, thr)
+                self.assertEqual(len(first), 1)
+                main.commit_alert_state(p, state, first, today)
+
+                p, state, thr = main.open_alert_state(today)
+                second = main.select_fresh_deals([aviasales], 10, state, thr)
+                self.assertEqual(second, [])
+
+
+class DealsLogTests(unittest.TestCase):
+    def _deal(self, dedupe, price, source="ryanair", dest="Barcelona", route="DUB - BCN",
+              start=dt.date(2026, 9, 4), end=dt.date(2026, 9, 6), url=""):
+        return {
+            "dedupe_key": dedupe,
+            "source": source,
+            "destination": dest,
+            "route": route,
+            "price": f"EUR {price:.2f}",
+            "price_value": price,
+            "price_eur": price,
+            "currency": "EUR",
+            "airline": "Ryanair",
+            "stops": "Non-stop",
+            "nights": (end - start).days,
+            "days_off": 1,
+            "start_date": start,
+            "end_date": end,
+            "url": url,
+        }
+
+    def test_upsert_replaces_same_trip_in_place_and_tracks_timestamps(self):
+        log = {}
+        main.upsert_deals_log(log, [self._deal("DUB-BCN:2026-09-04:2026-09-06", 50.0)], "2026-06-20T07:00:00Z")
+        self.assertEqual(len(log), 1)
+
+        # Re-seeing the same trip (cheaper) replaces it in place: one entry, new
+        # last_seen, preserved first_seen, incremented count, cheapest price kept.
+        main.upsert_deals_log(log, [self._deal("DUB-BCN:2026-09-04:2026-09-06", 40.0)], "2026-06-24T07:00:00Z")
+        self.assertEqual(len(log), 1)
+        entry = next(iter(log.values()))
+        self.assertEqual(entry["first_seen"], "2026-06-20T07:00:00Z")
+        self.assertEqual(entry["last_seen"], "2026-06-24T07:00:00Z")
+        self.assertEqual(entry["seen_count"], 2)
+        self.assertEqual(entry["price_eur"], 40.0)
+
+    def test_upsert_keeps_cheapest_price_across_sources(self):
+        log = {}
+        now = "2026-06-24T07:00:00Z"
+        main.upsert_deals_log(log, [self._deal("DUB-BCN:2026-09-04:2026-09-06", 45.0, source="ryanair")], now)
+        main.upsert_deals_log(log, [self._deal("DUB-BCN:2026-09-04:2026-09-06", 39.0, source="aviasales")], now)
+        self.assertEqual(len(log), 1)
+        entry = next(iter(log.values()))
+        self.assertEqual(entry["price_eur"], 39.0)
+        self.assertEqual(entry["source"], "aviasales")
+        self.assertEqual(entry["seen_count"], 2)
+
+    def test_prune_drops_past_trips(self):
+        log = {
+            "future": {"id": "future", "return_date": "2026-09-06", "price_eur": 50.0},
+            "past": {"id": "past", "return_date": "2026-01-01", "price_eur": 50.0},
+        }
+        pruned = main.prune_deals_log(log, dt.date(2026, 6, 24))
+        self.assertIn("future", pruned)
+        self.assertNotIn("past", pruned)
+
+    def test_record_writes_full_schema(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "deals.json")
+            with patch.dict(os.environ, {"DEALS_LOG_FILE": path}):
+                main.record_deals_to_log(
+                    [self._deal("DUB-BCN:2026-09-04:2026-09-06", 45.0, url="https://x")],
+                    today=dt.date(2026, 6, 24), now_iso="2026-06-24T07:00:00Z",
+                )
+            with open(path, encoding="utf-8") as handle:
+                data = json.load(handle)
+        self.assertEqual(data["deal_count"], 1)
+        self.assertEqual(data["generated_at"], "2026-06-24T07:00:00Z")
+        entry = data["deals"][0]
+        for field in ("id", "origin", "origin_city", "destination", "destination_code",
+                      "route", "depart_date", "return_date", "dates_label", "nights",
+                      "days_off", "price", "price_eur", "currency", "airline", "stops",
+                      "source", "url", "first_seen", "last_seen", "seen_count"):
+            self.assertIn(field, entry)
+        self.assertEqual(entry["origin"], "DUB")
+        self.assertEqual(entry["origin_city"], "Dublin")
+        self.assertEqual(entry["destination_code"], "BCN")
+        self.assertEqual(entry["route"], "DUB → BCN")
+        self.assertEqual(entry["depart_date"], "2026-09-04")
+
+    def test_disabled_when_path_empty(self):
+        with patch.dict(os.environ, {"DEALS_LOG_FILE": ""}):
+            self.assertIsNone(main.record_deals_to_log([self._deal("k", 10.0)]))
+
+
+class RyanairWindowTests(unittest.TestCase):
+    def _config(self):
+        return {"market": "en-ie", "max_trip_nights": 3, "max_return_price": 100.0}
+
+    def test_bulk_query_omits_destination_and_extends_inbound_for_boundary(self):
+        params = main.build_ryanair_fare_params(
+            "DUB", dt.date(2026, 10, 1), dt.date(2026, 10, 31), self._config()
+        )
+        # No fixed arrival -> one call returns every destination.
+        self.assertNotIn("arrivalAirportIataCode", params)
+        self.assertEqual(params["outboundDepartureDateTo"], "2026-10-31")
+        # Fri 31 Oct -> Sun 2 Nov must be reachable: inbound runs to 31 Oct + 3
+        # nights = 3 Nov, so a return on 2 Nov is in range (no month-boundary gap).
+        self.assertEqual(params["inboundDepartureDateTo"], "2026-11-03")
+
+    def test_destination_code_included_when_given(self):
+        params = main.build_ryanair_fare_params(
+            "DUB", dt.date(2026, 10, 1), dt.date(2026, 10, 31), self._config(), destination_code="BCN"
+        )
+        self.assertEqual(params["arrivalAirportIataCode"], "BCN")
+
+
+class TelegramChunkTests(unittest.TestCase):
+    def test_short_text_is_single_chunk(self):
+        self.assertEqual(main.chunk_telegram_text("hello"), ["hello"])
+
+    def test_long_text_splits_under_limit_without_losing_content(self):
+        line = "x" * 1000
+        text = "\n".join([line] * 12)  # ~12k chars
+        chunks = main.chunk_telegram_text(text, limit=4096)
+        self.assertGreaterEqual(len(chunks), 3)
+        self.assertTrue(all(len(chunk) <= 4096 for chunk in chunks))
+        # No characters dropped (newline boundaries may shift, content does not).
+        self.assertEqual("".join(chunks).replace("\n", ""), text.replace("\n", ""))
+
+    def test_unbroken_text_hard_splits_under_limit(self):
+        text = "y" * 9000
+        chunks = main.chunk_telegram_text(text, limit=4096)
+        self.assertTrue(all(len(chunk) <= 4096 for chunk in chunks))
+        self.assertEqual("".join(chunks), text)
 
 
 class FakeImap:

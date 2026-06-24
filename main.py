@@ -1,3 +1,4 @@
+import functools
 import html
 import imaplib
 import json
@@ -13,6 +14,11 @@ import calendar
 import datetime as dt
 import unicodedata
 from email.header import decode_header
+
+
+def utc_now_iso():
+    """Current UTC time as an ISO-8601 'Z' timestamp (second precision)."""
+    return dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def get_env(name, required=True, default=None):
@@ -198,7 +204,6 @@ RYANAIR_DEFAULT_DIGEST_LIMIT = 12
 RYANAIR_DEFAULT_MAX_TRIP_NIGHTS = 3
 RYANAIR_DEFAULT_DESTINATIONS = "curated"
 RYANAIR_DEFAULT_REQUEST_DELAY = 0.3
-RYANAIR_DEFAULT_MAX_DESTINATIONS = 60
 
 # Per-origin Ryanair market (drives response currency). Falls back to the
 # configured default market for any origin not listed here.
@@ -234,6 +239,18 @@ AVIASALES_DEFAULT_DIGEST_LIMIT = 12
 
 STATE_DEFAULT_PATH = "state/seen_deals.json"
 PRICE_DROP_DEFAULT_EUR = 5.0
+
+# Public-facing deals log that powers the GitHub Pages site (docs/index.html).
+# Each eligible deal is upserted by a source-agnostic identity so re-seeing the
+# same trip refreshes it in place (timestamp/price) instead of duplicating.
+DEALS_LOG_DEFAULT_PATH = "docs/deals.json"
+
+# Display city for the (few) origin airports we fly from.
+ORIGIN_CITIES = {
+    "DUB": "Dublin",
+    "BFS": "Belfast",
+    "BHD": "Belfast",
+}
 
 VALID_FLIGHT_SOURCES = {"gmail", "ryanair", "aviasales"}
 GMAIL_FALLBACK_SEARCHES = (
@@ -391,6 +408,7 @@ def add_fixed_holidays_with_observed(holidays, fixed_dates):
         holidays.add(observed)
 
 
+@functools.lru_cache(maxsize=None)
 def ireland_days_off(year):
     holidays = set()
     fixed_dates = {
@@ -619,9 +637,11 @@ def normalize_ryanair_fare(fare):
             f"ryanair:{origin_code}-{destination_code}:"
             f"{outbound.get('departureDate')}:{inbound.get('departureDate')}:{price_value:.2f}"
         ),
+        # Source-agnostic, date-based identity: the same trip from Ryanair and
+        # Aviasales shares this key, so alert state de-duplicates across sources.
         "dedupe_key": (
-            f"ryanair:{origin_code}-{destination_code}:"
-            f"{outbound.get('departureDate')}:{inbound.get('departureDate')}"
+            f"{origin_code}-{destination_code}:"
+            f"{outbound_departure.date().isoformat()}:{inbound_departure.date().isoformat()}"
         ),
         "dates": f"{format_ryanair_date(outbound_departure.date())} - {format_ryanair_date(inbound_departure.date())}",
         "price": format_ryanair_price(summary_price),
@@ -740,17 +760,22 @@ def fetch_ryanair_routes(origin):
     return data if isinstance(data, list) else []
 
 
-def build_ryanair_fare_params(origin, destination_code, outbound_from, outbound_to, config, market=None):
-    return {
+def build_ryanair_fare_params(origin, outbound_from, outbound_to, config, market=None, destination_code=None):
+    """Round-trip fare query params. With no destination_code the endpoint
+    returns the cheapest fares to *every* reachable destination in one call.
+    The inbound window is extended by max_trip_nights past the outbound window so
+    weekends that straddle the window's end (e.g. Fri 31 Oct -> Sun 2 Nov) are
+    still returned rather than falling between two monthly windows."""
+    inbound_to = outbound_to + dt.timedelta(days=config["max_trip_nights"])
+    params = {
         "departureAirportIataCode": origin,
-        "arrivalAirportIataCode": destination_code,
         "market": market or config["market"],
         "adultPaxCount": "1",
         "searchMode": "ALL",
         "outboundDepartureDateFrom": outbound_from.isoformat(),
         "outboundDepartureDateTo": outbound_to.isoformat(),
         "inboundDepartureDateFrom": outbound_from.isoformat(),
-        "inboundDepartureDateTo": outbound_to.isoformat(),
+        "inboundDepartureDateTo": inbound_to.isoformat(),
         "durationFrom": str(MIN_NIGHTS),
         "durationTo": str(config["max_trip_nights"]),
         "outboundDepartureTimeFrom": "00:00",
@@ -759,6 +784,9 @@ def build_ryanair_fare_params(origin, destination_code, outbound_from, outbound_
         "inboundDepartureTimeTo": "23:59",
         "priceValueTo": f"{config['max_return_price']:g}",
     }
+    if destination_code:
+        params["arrivalAirportIataCode"] = destination_code
+    return params
 
 
 def fetch_ryanair_round_trip_fares(params):
@@ -792,7 +820,6 @@ def get_ryanair_config():
         "max_return_price": get_float_env("RYANAIR_MAX_RETURN_PRICE", RYANAIR_DEFAULT_MAX_RETURN_PRICE),
         "digest_limit": get_int_env("RYANAIR_DIGEST_LIMIT", RYANAIR_DEFAULT_DIGEST_LIMIT),
         "max_trip_nights": get_int_env("RYANAIR_MAX_TRIP_NIGHTS", RYANAIR_DEFAULT_MAX_TRIP_NIGHTS),
-        "max_destinations": get_int_env("RYANAIR_MAX_DESTINATIONS", RYANAIR_DEFAULT_MAX_DESTINATIONS),
         "request_delay": get_float_env("RYANAIR_REQUEST_DELAY", RYANAIR_DEFAULT_REQUEST_DELAY),
     }
     if config["scan_months"] < 1:
@@ -801,60 +828,49 @@ def get_ryanair_config():
         fail("RYANAIR_DIGEST_LIMIT must be at least 1")
     if config["max_trip_nights"] < MIN_NIGHTS:
         fail(f"RYANAIR_MAX_TRIP_NIGHTS must be at least {MIN_NIGHTS}")
-    if config["max_destinations"] < 1:
-        fail("RYANAIR_MAX_DESTINATIONS must be at least 1")
     return config
 
 
 def collect_ryanair_deals(config, today=None):
+    """Query Ryanair's round-trip fare finder once per origin per month window
+    with no fixed destination, so a single call returns the cheapest fares to
+    every reachable city. This replaces the old per-destination fan-out (which
+    cost hundreds of calls per run and silently capped coverage to the
+    alphabetically-first destinations). Per-destination month gating in
+    `curated` mode is applied to each returned fare via add_filter_details."""
     today = today or dt.date.today()
     month_gated = config["destinations"] == "curated"
     deals_by_key = {}
     for origin in config["origins"]:
         market = ORIGIN_MARKETS.get(origin.upper(), config["market"])
-        try:
-            routes = fetch_ryanair_routes(origin)
-        except Exception as exc:
-            print(f"Warning: could not fetch Ryanair routes for {origin}: {exc}")
-            continue
+        for outbound_from, outbound_to in ryanair_query_windows(
+            today, config["scan_months"], month_gated=False
+        ):
+            params = build_ryanair_fare_params(
+                origin, outbound_from, outbound_to, config, market=market
+            )
+            try:
+                fares = fetch_ryanair_round_trip_fares(params)
+            except Exception as exc:
+                print(f"Warning: could not fetch Ryanair fares {origin} {outbound_from:%Y-%m}: {exc}")
+                continue
+            finally:
+                if config["request_delay"] > 0:
+                    time.sleep(config["request_delay"])
 
-        catalog = ryanair_destination_catalog(origin, routes, config["destinations"])
-        if not catalog:
-            print(f"No Ryanair destinations are available from {origin}.")
-            continue
-
-        destination_codes = sorted(catalog)[: config["max_destinations"]]
-        for destination_code in destination_codes:
-            destination = catalog[destination_code]
-            for outbound_from, outbound_to in ryanair_query_windows(
-                today, config["scan_months"], destination, month_gated=month_gated
-            ):
-                params = build_ryanair_fare_params(
-                    origin, destination_code, outbound_from, outbound_to, config, market=market
-                )
+            for fare in fares:
                 try:
-                    fares = fetch_ryanair_round_trip_fares(params)
-                except Exception as exc:
-                    print(f"Warning: could not fetch Ryanair fares {origin}-{destination_code}: {exc}")
+                    deal = normalize_ryanair_fare(fare)
+                except (KeyError, TypeError, ValueError) as exc:
+                    print(f"Warning: skipping malformed Ryanair fare from {origin}: {exc}")
                     continue
-                finally:
-                    if config["request_delay"] > 0:
-                        time.sleep(config["request_delay"])
-
-                for fare in fares:
-                    try:
-                        deal = normalize_ryanair_fare(fare)
-                    except (KeyError, TypeError, ValueError) as exc:
-                        print(f"Warning: skipping malformed Ryanair fare {origin}-{destination_code}: {exc}")
-                        continue
-                    detailed = add_filter_details(
-                        deal, today, f"{destination} {today.year}", month_gated=month_gated
-                    )
-                    if not detailed["eligible"]:
-                        continue
-                    if detailed["price_eur"] > config["max_return_price"]:
-                        continue
-                    deals_by_key[detailed["source_key"]] = detailed
+                context = f"{deal.get('destination') or ''} {today.year}"
+                detailed = add_filter_details(deal, today, context, month_gated=month_gated)
+                if not detailed["eligible"]:
+                    continue
+                if detailed["price_eur"] > config["max_return_price"]:
+                    continue
+                deals_by_key[detailed["source_key"]] = detailed
 
     return sorted(
         deals_by_key.values(),
@@ -1058,22 +1074,62 @@ def build_alert_message(subject, from_header, gmail_label, body, deals):
     return message_text
 
 
-def send_telegram_message(token, chat_id, text):
-    payload = json.dumps({
-        "chat_id": chat_id,
-        "text": text,
-    }).encode("utf-8")
+TELEGRAM_MAX_CHARS = 4096
+
+
+def chunk_telegram_text(text, limit=TELEGRAM_MAX_CHARS):
+    """Split text into <=limit-char chunks, preferring to break on a newline.
+    Telegram rejects messages over 4096 chars, which would otherwise drop a long
+    digest entirely."""
+    chunks = []
+    remaining = text or ""
+    while len(remaining) > limit:
+        window = remaining[:limit]
+        split_at = window.rfind("\n")
+        if split_at <= 0:
+            split_at = limit
+        chunk = remaining[:split_at].rstrip("\n")
+        if chunk:
+            chunks.append(chunk)
+        remaining = remaining[split_at:].lstrip("\n")
+    if remaining:
+        chunks.append(remaining)
+    return chunks or [""]
+
+
+def _post_telegram_message(token, chat_id, text, retries=3, backoff=1.5):
+    payload = json.dumps({"chat_id": chat_id, "text": text}).encode("utf-8")
     url = f"https://api.telegram.org/bot{token}/sendMessage"
-    request = urllib.request.Request(
-        url,
-        data=payload,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    with urllib.request.urlopen(request, timeout=30) as response:
-        result = json.load(response)
-    if not result.get("ok"):
-        raise RuntimeError(f"Telegram send failed: {result}")
+    attempt = 0
+    while True:
+        try:
+            request = urllib.request.Request(
+                url, data=payload,
+                headers={"Content-Type": "application/json"}, method="POST",
+            )
+            with urllib.request.urlopen(request, timeout=30) as response:
+                result = json.load(response)
+            if not result.get("ok"):
+                raise RuntimeError(f"Telegram send failed: {result}")
+            return result
+        except urllib.error.HTTPError as exc:
+            attempt += 1
+            if exc.code not in (420, 429, 500, 502, 503, 504) or attempt > retries:
+                raise
+            time.sleep(backoff ** attempt)
+        except urllib.error.URLError:
+            attempt += 1
+            if attempt > retries:
+                raise
+            time.sleep(backoff ** attempt)
+
+
+def send_telegram_message(token, chat_id, text):
+    """Send `text` to Telegram, transparently splitting over-long messages into
+    multiple chunks and retrying transient rate-limit/server errors."""
+    result = None
+    for chunk in chunk_telegram_text(text):
+        result = _post_telegram_message(token, chat_id, chunk)
     return result
 
 
@@ -1124,12 +1180,36 @@ def search_gmail_message_ids(imap_conn, criteria):
     return data[0].split() if data and data[0] else []
 
 
-def process_gmail_message(imap_conn, num, gmail_label, telegram_token, telegram_chat_id, dry_run=False):
+GMAIL_PROCESSED_DEFAULT_LABEL = "FlightChecker/Processed"
+
+
+def mark_message_processed(imap_conn, num, dry_run, processed_label):
+    """Mark a handled message read AND tag it with a processed label. The label
+    (rather than read-state alone) means a parser regression is recoverable: the
+    messages we consumed can be found and re-examined by searching that label,
+    instead of being silently lost among genuinely-read mail."""
+    num_str = num.decode("utf-8") if isinstance(num, bytes) else str(num)
+    if dry_run:
+        print(f"DRY RUN: would mark message {num_str} as processed.")
+        return
+    if processed_label:
+        try:
+            imap_conn.store(num, "+X-GM-LABELS", f'"{processed_label}"')
+        except imaplib.IMAP4.error as exc:
+            print(f"Warning: could not label message {num_str} as processed: {exc}")
+    imap_conn.store(num, "+FLAGS", "\\Seen")
+    print(f"Marked message {num_str} as processed.")
+
+
+def process_gmail_message(imap_conn, num, gmail_label, telegram_token, telegram_chat_id,
+                          processed_label, dry_run=False):
+    """Process one message; return the list of matching deals (for the public
+    log), or [] if it had nothing alert-worthy."""
     num_str = num.decode("utf-8") if isinstance(num, bytes) else str(num)
     status, msg_data = imap_conn.fetch(num, "(RFC822)")
     if status != "OK":
         print(f"Skipping message {num_str}: fetch failed.")
-        return
+        return []
 
     raw_email = msg_data[0][1]
     message = email.message_from_bytes(raw_email)
@@ -1140,46 +1220,41 @@ def process_gmail_message(imap_conn, num, gmail_label, telegram_token, telegram_
 
     if not deals:
         print(f"Skipping message {num_str}: no parseable flight deals found.")
-        if dry_run:
-            print(f"DRY RUN: would mark message {num_str} as read.")
-        else:
-            imap_conn.store(num, "+FLAGS", "\\Seen")
-            print(f"Marked message {num_str} as read.")
-        return
+        mark_message_processed(imap_conn, num, dry_run, processed_label)
+        return []
 
     matching_deals, checked_deals = filter_deals(deals, f"{subject}\n{body}")
     if not matching_deals:
         reasons = sorted({deal["filter_reason"] for deal in checked_deals})
         print(f"Skipping message {num_str}: no deals matched filters ({'; '.join(reasons)}).")
-        if dry_run:
-            print(f"DRY RUN: would mark message {num_str} as read.")
-        else:
-            imap_conn.store(num, "+FLAGS", "\\Seen")
-            print(f"Marked message {num_str} as read.")
-        return
+        mark_message_processed(imap_conn, num, dry_run, processed_label)
+        return []
 
     message_text = build_alert_message(subject, from_header, gmail_label, body, matching_deals)
 
     if dry_run:
         print(f"DRY RUN: would send Telegram notification for message {num_str}:")
         print(message_text)
-        print(f"DRY RUN: would mark message {num_str} as read.")
-    else:
-        print(f"Sending Telegram notification for message {num_str}...")
-        send_telegram_message(telegram_token, telegram_chat_id, message_text)
-        imap_conn.store(num, "+FLAGS", "\\Seen")
-        print(f"Marked message {num_str} as read.")
+        mark_message_processed(imap_conn, num, dry_run, processed_label)
+        return matching_deals
+
+    print(f"Sending Telegram notification for message {num_str}...")
+    send_telegram_message(telegram_token, telegram_chat_id, message_text)
+    mark_message_processed(imap_conn, num, dry_run, processed_label)
+    return matching_deals
 
 
 def run_gmail_source(dry_run=False):
     gmail_user = get_env("GMAIL_USER")
     gmail_password = get_env("GMAIL_APP_PASSWORD")
     gmail_label = get_env("GMAIL_LABEL", required=False, default="Holidays/Flight alerts")
+    processed_label = get_env("GMAIL_PROCESSED_LABEL", required=False, default=GMAIL_PROCESSED_DEFAULT_LABEL)
     telegram_token = None if dry_run else get_env("TELEGRAM_BOT_TOKEN")
     telegram_chat_id = None if dry_run else get_env("TELEGRAM_CHAT_ID")
 
     print(f"Checking Gmail label: {gmail_label}")
     imap_conn = connect_to_gmail(gmail_user, gmail_password)
+    matched_deals = []
 
     selected_label = select_label_mailbox(imap_conn, gmail_label)
     if selected_label:
@@ -1203,7 +1278,9 @@ def run_gmail_source(dry_run=False):
     else:
         print(f"Found {len(message_ids)} unread message(s) in label '{gmail_label}'.")
         for num in message_ids:
-            process_gmail_message(imap_conn, num, gmail_label, telegram_token, telegram_chat_id, dry_run=dry_run)
+            matched_deals.extend(process_gmail_message(
+                imap_conn, num, gmail_label, telegram_token, telegram_chat_id,
+                processed_label, dry_run=dry_run))
 
     all_mailbox = select_all_mailbox(imap_conn)
     if not all_mailbox:
@@ -1217,9 +1294,15 @@ def run_gmail_source(dry_run=False):
                 continue
             print(f"Found {len(fallback_message_ids)} unread message(s) from {description}.")
             for num in fallback_message_ids:
-                process_gmail_message(imap_conn, num, gmail_label, telegram_token, telegram_chat_id, dry_run=dry_run)
+                matched_deals.extend(process_gmail_message(
+                    imap_conn, num, gmail_label, telegram_token, telegram_chat_id,
+                    processed_label, dry_run=dry_run))
 
     imap_conn.logout()
+    # Only write the public log when email actually yielded a deal, so the
+    # 15-minute Gmail schedule doesn't churn docs/deals.json on every empty run.
+    if not dry_run and matched_deals:
+        record_deals_to_log(matched_deals)
     print("Done.")
 
 
@@ -1282,28 +1365,195 @@ def commit_state(deals, state, today):
         }
 
 
-def select_deals_to_alert(deals, limit, dry_run, today=None):
-    """Dedupe to the cheapest trip per destination, rank by price, then keep only
-    the new / price-dropped ones (using persisted state) up to the digest limit.
-    State is saved only on real runs so dry runs and tests never mutate it."""
+# --- Public deals log (powers the GitHub Pages site at docs/index.html) -------
+
+def deals_log_path():
+    """docs/deals.json by default; set DEALS_LOG_FILE='' to disable logging.
+    Distinguishes unset (use default) from empty (disabled) -- unlike get_env,
+    which would coerce '' back to the default."""
+    value = os.getenv("DEALS_LOG_FILE")
+    if value is None:
+        return DEALS_LOG_DEFAULT_PATH
+    return value.strip()
+
+
+def split_route_codes(route):
+    """Best-effort (origin_code, destination_code) from a 'DUB - BCN' route."""
+    match = re.search(r"\b([A-Z]{3})\b\s*(?:->|-|–|to)\s*\b([A-Z]{3})\b", route or "", re.I)
+    if match:
+        return match.group(1).upper(), match.group(2).upper()
+    return "", ""
+
+
+def deal_identity(deal):
+    """Source-agnostic identity used to upsert the log: the same trip from any
+    source (or run) maps to the same key, so re-seeing it replaces in place."""
+    key = deal.get("dedupe_key")
+    if key:
+        return key
+    origin, destination = split_route_codes(deal.get("route"))
+    start = deal.get("start_date")
+    end = deal.get("end_date")
+    start_iso = start.isoformat() if isinstance(start, dt.date) else str(deal.get("dates") or "")
+    end_iso = end.isoformat() if isinstance(end, dt.date) else ""
+    return f"{origin}-{destination}:{start_iso}:{end_iso}"
+
+
+def deal_to_log_entry(deal, now_iso):
+    origin, destination_code = split_route_codes(deal.get("route"))
+    start = deal.get("start_date")
+    end = deal.get("end_date")
+    route = (deal.get("route") or "").replace(" - ", " → ").replace("->", "→")
+    return {
+        "id": deal_identity(deal),
+        "origin": origin,
+        "origin_city": ORIGIN_CITIES.get(origin, origin),
+        "destination": deal.get("destination") or destination_code,
+        "destination_code": destination_code,
+        "route": route,
+        "depart_date": start.isoformat() if isinstance(start, dt.date) else "",
+        "return_date": end.isoformat() if isinstance(end, dt.date) else "",
+        "dates_label": deal.get("dates") or "",
+        "nights": deal.get("nights"),
+        "days_off": deal.get("days_off"),
+        "price": deal.get("price") or "",
+        "price_value": deal.get("price_value"),
+        "price_eur": round(deal_price_eur(deal), 2),
+        "currency": deal.get("currency") or "EUR",
+        "airline": deal.get("airline") or "",
+        "stops": deal.get("stops") or "",
+        "source": deal.get("source") or "gmail",
+        "url": deal.get("url") or "",
+        "first_seen": now_iso,
+        "last_seen": now_iso,
+        "seen_count": 1,
+    }
+
+
+def load_deals_log(path):
+    """Return {id: entry} parsed from the JSON log file (empty on any error)."""
+    if not path or not os.path.exists(path):
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+    except (OSError, ValueError):
+        return {}
+    deals = data.get("deals") if isinstance(data, dict) else None
+    if not isinstance(deals, list):
+        return {}
+    return {entry["id"]: entry for entry in deals if isinstance(entry, dict) and entry.get("id")}
+
+
+def upsert_deals_log(log, deals, now_iso):
+    """Insert/refresh each deal. Re-seeing the same trip replaces it in place:
+    last_seen is bumped, seen_count incremented, first_seen preserved, and the
+    cheapest price/source/url ever seen for that trip is kept for display."""
+    for deal in deals:
+        entry = deal_to_log_entry(deal, now_iso)
+        deal_id = entry["id"]
+        existing = log.get(deal_id)
+        if existing is None:
+            log[deal_id] = entry
+            continue
+        entry["first_seen"] = existing.get("first_seen", now_iso)
+        entry["seen_count"] = int(existing.get("seen_count", 1)) + 1
+        entry["last_seen"] = now_iso
+        existing_eur = existing.get("price_eur")
+        if existing_eur is not None and existing_eur <= entry["price_eur"]:
+            for field in ("price", "price_value", "price_eur", "currency",
+                          "airline", "stops", "source", "url", "destination"):
+                entry[field] = existing.get(field, entry[field])
+        log[deal_id] = entry
+    return log
+
+
+def prune_deals_log(log, today):
+    """Drop trips whose return date is in the past."""
+    today_iso = today.isoformat()
+    kept = {}
+    for deal_id, entry in log.items():
+        return_date = entry.get("return_date") or ""
+        if return_date and return_date < today_iso:
+            continue
+        kept[deal_id] = entry
+    return kept
+
+
+def write_deals_log(path, log, now_iso):
+    deals = sorted(
+        log.values(),
+        key=lambda entry: (
+            entry["price_eur"] if entry.get("price_eur") is not None else float("inf"),
+            entry.get("depart_date") or "9999-99-99",
+        ),
+    )
+    payload = {"generated_at": now_iso, "deal_count": len(deals), "deals": deals}
+    directory = os.path.dirname(path)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2, ensure_ascii=False)
+        handle.write("\n")
+
+
+def record_deals_to_log(deals, today=None, now_iso=None):
+    """Upsert eligible deals into the public log and prune past trips. No-op when
+    DEALS_LOG_FILE is empty. Returns the path written, or None."""
+    path = deals_log_path()
+    if not path:
+        return None
     today = today or dt.date.today()
+    now_iso = now_iso or utc_now_iso()
+    log = load_deals_log(path)
+    upsert_deals_log(log, deals, now_iso)
+    log = prune_deals_log(log, today)
+    write_deals_log(path, log, now_iso)
+    return path
+
+
+# --- Telegram alert de-duplication state -------------------------------------
+
+def alert_state_path():
+    """state/seen_deals.json by default; set STATE_FILE='' to disable dedupe."""
+    value = os.getenv("STATE_FILE")
+    if value is None:
+        return STATE_DEFAULT_PATH
+    return value.strip()
+
+
+def open_alert_state(today):
+    """Load (path, state, threshold) for alert de-duplication, or (None, None,
+    None) when STATE_FILE is disabled."""
+    path = alert_state_path()
+    if not path:
+        return None, None, None
+    threshold = get_float_env("PRICE_DROP_EUR", PRICE_DROP_DEFAULT_EUR)
+    state = prune_state(load_state(path), today)
+    return path, state, threshold
+
+
+def select_fresh_deals(deals, limit, state, threshold):
+    """Cheapest trip per destination, ranked by price, keeping only new or
+    price-dropped trips (per state). Does NOT mutate or persist state -- call
+    commit_alert_state only after the alert has actually been sent."""
     ranked = sorted(
         dedupe_cheapest_per_destination(deals),
         key=lambda deal: (deal_price_eur(deal), deal.get("start_date") or dt.date.max),
     )
-
-    path = get_env("STATE_FILE", required=False, default=STATE_DEFAULT_PATH)
-    if not path:
+    if state is None:
         return ranked[:limit]
-
-    threshold = get_float_env("PRICE_DROP_EUR", PRICE_DROP_DEFAULT_EUR)
-    state = prune_state(load_state(path), today)
     fresh = [deal for deal in ranked if is_fresh(deal, state, threshold)]
-    shown = fresh[:limit]
-    if not dry_run:
-        commit_state(shown, state, today)
-        save_state(path, state)
-    return shown
+    return fresh[:limit]
+
+
+def commit_alert_state(path, state, shown, today):
+    """Persist that `shown` were alerted. Called only after a successful send so a
+    failed delivery never suppresses a future re-alert."""
+    if not path or state is None:
+        return
+    commit_state(shown, state, today)
+    save_state(path, state)
 
 
 def run_ryanair_source(dry_run=False):
@@ -1315,12 +1565,16 @@ def run_ryanair_source(dry_run=False):
         f"scan_months={config['scan_months']}, "
         f"max_return_price={config['max_return_price']:g}"
     )
-    deals = collect_ryanair_deals(config)
+    today = dt.date.today()
+    deals = collect_ryanair_deals(config, today)
+    if not dry_run:
+        record_deals_to_log(deals, today)
     if not deals:
         print("No Ryanair fares matched the configured filters.")
         return
 
-    shown = select_deals_to_alert(deals, config["digest_limit"], dry_run)
+    path, state, threshold = open_alert_state(today)
+    shown = select_fresh_deals(deals, config["digest_limit"], state, threshold)
     if not shown:
         print("No new or cheaper Ryanair fares since the last run.")
         return
@@ -1335,6 +1589,7 @@ def run_ryanair_source(dry_run=False):
     telegram_chat_id = get_env("TELEGRAM_CHAT_ID")
     print(f"Sending Ryanair Telegram digest with {len(shown)} deal(s)...")
     send_telegram_message(telegram_token, telegram_chat_id, message_text)
+    commit_alert_state(path, state, shown, today)
     print("Done.")
 
 
@@ -1392,9 +1647,11 @@ def normalize_aviasales_offer(item):
             f"aviasales:{origin_code}-{destination_code}:"
             f"{item.get('departure_at')}:{item.get('return_at')}:{price_value:.2f}"
         ),
+        # Source-agnostic, date-based identity (see normalize_ryanair_fare): keyed
+        # on calendar dates so it matches the same trip from any source.
         "dedupe_key": (
-            f"aviasales:{origin_code}-{destination_code}:"
-            f"{item.get('departure_at')}:{item.get('return_at')}"
+            f"{origin_code}-{destination_code}:"
+            f"{start_date.isoformat()}:{end_date.isoformat()}"
         ),
         "dates": f"{format_ryanair_date(start_date)} - {format_ryanair_date(end_date)}",
         "price": f"{currency} {price_value:.2f}",
@@ -1473,12 +1730,16 @@ def run_aviasales_source(dry_run=False):
         f"scan_months={config['scan_months']}, "
         f"max_return_price={config['max_return_price']:g}"
     )
-    deals = collect_aviasales_deals(config)
+    today = dt.date.today()
+    deals = collect_aviasales_deals(config, today)
+    if not dry_run:
+        record_deals_to_log(deals, today)
     if not deals:
         print("No Aviasales fares matched the configured filters.")
         return
 
-    shown = select_deals_to_alert(deals, config["digest_limit"], dry_run)
+    path, state, threshold = open_alert_state(today)
+    shown = select_fresh_deals(deals, config["digest_limit"], state, threshold)
     if not shown:
         print("No new or cheaper Aviasales fares since the last run.")
         return
@@ -1493,6 +1754,7 @@ def run_aviasales_source(dry_run=False):
     telegram_chat_id = get_env("TELEGRAM_CHAT_ID")
     print(f"Sending Aviasales Telegram digest with {len(shown)} deal(s)...")
     send_telegram_message(telegram_token, telegram_chat_id, message_text)
+    commit_alert_state(path, state, shown, today)
     print("Done.")
 
 

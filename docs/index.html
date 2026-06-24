@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Cheap weekend flight deals from Dublin (DUB) and Belfast (BFS). Updated automatically." />
+  <title>Eitiltí Saora — Cheap weekend escapes from Dublin &amp; Belfast</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <!-- Hero -->
+  <header class="hero">
+    <div class="hero__inner">
+      <h1 class="hero__title">Eitiltí Saora</h1>
+      <p class="hero__tagline">Cheap weekend escapes from Dublin &amp; Belfast.</p>
+    </div>
+  </header>
+
+  <main class="page" id="main">
+    <!-- Controls -->
+    <section class="controls" aria-label="Search and filter deals">
+      <div class="controls__search">
+        <label class="control" for="search">
+          <span class="control__label">Search</span>
+          <input
+            type="search"
+            id="search"
+            class="control__input"
+            placeholder="Barcelona, BCN, Ryanair…"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </label>
+      </div>
+
+      <div class="controls__filters">
+        <label class="control" for="origin">
+          <span class="control__label">Origin</span>
+          <select id="origin" class="control__input">
+            <option value="all">All</option>
+            <option value="DUB">Dublin (DUB)</option>
+            <option value="BFS">Belfast (BFS)</option>
+          </select>
+        </label>
+
+        <label class="control" for="source">
+          <span class="control__label">Source</span>
+          <select id="source" class="control__input">
+            <option value="all">All</option>
+            <option value="ryanair">Ryanair</option>
+            <option value="aviasales">Aviasales</option>
+            <option value="gmail">Email</option>
+          </select>
+        </label>
+
+        <label class="control" for="maxprice">
+          <span class="control__label">Max price</span>
+          <select id="maxprice" class="control__input">
+            <option value="25">€25</option>
+            <option value="50">€50</option>
+            <option value="75">€75</option>
+            <option value="100">€100</option>
+            <option value="any" selected>Any</option>
+          </select>
+        </label>
+
+        <label class="control" for="sort">
+          <span class="control__label">Sort</span>
+          <select id="sort" class="control__input">
+            <option value="cheapest">Cheapest</option>
+            <option value="soonest">Soonest departure</option>
+            <option value="recent">Recently found</option>
+          </select>
+        </label>
+
+        <label class="control control--check" for="direct">
+          <input type="checkbox" id="direct" class="control__check" />
+          <span class="control__label">Direct only</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Status line -->
+    <section class="status" aria-live="polite">
+      <p class="status__count" id="status-count"></p>
+      <p class="status__updated" id="status-updated"></p>
+    </section>
+
+    <!-- Results -->
+    <section aria-label="Flight deals">
+      <ul class="deals" id="deals" aria-live="polite"></ul>
+      <div class="empty" id="empty" hidden></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Eitiltí Saora · prices are indicative and change fast — always confirm with the airline before booking.</p>
+  </footer>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>
