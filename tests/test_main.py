@@ -716,6 +716,26 @@ class ReviewRegressionTests(unittest.TestCase):
                             main.run_ryanair_source(dry_run=False)
             self.assertFalse(os.path.exists(state_path), "a failed send must not commit alert state")
 
+    def test_ryanair_deal_has_prefilled_booking_deeplink(self):
+        fare = {
+            "outbound": {
+                "departureAirport": {"iataCode": "DUB"},
+                "arrivalAirport": {"iataCode": "BUD", "city": {"name": "Budapest"}},
+                "departureDate": "2026-09-05T08:00:00", "flightNumber": "FR1",
+            },
+            "inbound": {
+                "departureAirport": {"iataCode": "BUD"},
+                "arrivalAirport": {"iataCode": "DUB"},
+                "departureDate": "2026-09-07T12:00:00", "flightNumber": "FR2",
+            },
+            "summary": {"price": {"value": 89.98, "currencyCode": "EUR"}},
+        }
+        url = main.normalize_ryanair_fare(fare)["url"]
+        self.assertTrue(url.startswith("https://www.ryanair.com/ie/en/trip/flights/select?"))
+        for fragment in ("originIata=DUB", "destinationIata=BUD",
+                         "dateOut=2026-09-05", "dateIn=2026-09-07", "isReturn=true"):
+            self.assertIn(fragment, url)
+
     def test_ryanair_and_aviasales_share_dedupe_key_for_same_trip(self):
         fare = {
             "outbound": {

@@ -118,6 +118,15 @@
     return null;
   }
 
+  /** Debounce: collapse rapid calls (e.g. keystrokes) into one. */
+  function debounce(fn, ms) {
+    var timer;
+    return function () {
+      clearTimeout(timer);
+      timer = setTimeout(fn, ms);
+    };
+  }
+
   /** Small convenience: make an element with a class + text. */
   function makeEl(tag, className, text) {
     var node = document.createElement(tag);
@@ -368,8 +377,9 @@
   // ====================================================================
 
   function attachListeners() {
-    // 'input' for live search; 'change' for selects/checkbox.
-    els.search.addEventListener("input", applyControls);
+    // 'input' for live search (debounced to avoid re-rendering on every
+    // keystroke); 'change' for selects/checkbox.
+    els.search.addEventListener("input", debounce(applyControls, 120));
     els.origin.addEventListener("change", applyControls);
     els.source.addEventListener("change", applyControls);
     els.maxprice.addEventListener("change", applyControls);
@@ -380,8 +390,9 @@
   function init() {
     attachListeners();
 
-    // Cache-bust so an updated deals.json is picked up promptly.
-    fetch("./deals.json?_=" + Date.now(), { cache: "no-store" })
+    // 'no-cache' revalidates (cheap 304 when unchanged) so repeat visits don't
+    // re-download the whole file, while still picking up updates promptly.
+    fetch("./deals.json", { cache: "no-cache" })
       .then(function (res) {
         if (!res.ok) {
           throw new Error("HTTP " + res.status);

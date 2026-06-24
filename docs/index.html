@@ -3,19 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Cheap weekend flight deals from Dublin (DUB) and Belfast (BFS). Updated automatically." />
-  <title>Eitiltí Saora — Cheap weekend escapes from Dublin &amp; Belfast</title>
+  <meta name="description" content="Eitiltí Saora — a free, always-on radar for cheap weekend flights from Dublin (DUB) and Belfast (BFS). Updated automatically." />
+  <meta name="theme-color" content="#f2f1ec" />
+  <title>Eitiltí Saora — Cheap weekend flights from Dublin &amp; Belfast</title>
+  <!-- Only local assets + system fonts: no remote requests, so the page loads instantly. -->
+  <link rel="preload" as="image" href="./assets/Airplane.jpg" />
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <!-- Hero -->
+  <!-- ============================ HERO ============================ -->
   <header class="hero">
-    <div class="hero__inner">
-      <h1 class="hero__title">Eitiltí Saora</h1>
-      <p class="hero__tagline">Cheap weekend escapes from Dublin &amp; Belfast.</p>
-    </div>
+    <p class="hero__kicker">Cheap weekend flights · Dublin &amp; Belfast</p>
+
+    <p class="hero__intro">
+      A free, always-on radar for cheap Friday-to-Sunday escapes from Dublin and
+      Belfast. Direct Ryanair and partner fares, refreshed daily and sorted
+      cheapest first.
+    </p>
+
+    <figure class="hero__figure">
+      <img
+        class="hero__photo"
+        src="./assets/Airplane.jpg"
+        alt="A plane wing above the clouds"
+        width="1024"
+        height="572"
+        decoding="async"
+      />
+    </figure>
+
+    <h1 class="hero__title">Eitiltí<br />Saora<span class="dot">.</span></h1>
   </header>
 
+  <!-- ============================ APP ============================= -->
   <main class="page" id="main">
     <!-- Controls -->
     <section class="controls" aria-label="Search and filter deals">
@@ -88,13 +108,16 @@
 
     <!-- Results -->
     <section aria-label="Flight deals">
-      <ul class="deals" id="deals" aria-live="polite"></ul>
+      <ul class="deals" id="deals"></ul>
       <div class="empty" id="empty" hidden></div>
     </section>
   </main>
 
   <footer class="footer">
-    <p>Eitiltí Saora · prices are indicative and change fast — always confirm with the airline before booking.</p>
+    <p>
+      <span class="footer__mark">Eitiltí Saora<span class="dot">.</span></span>
+      Prices are indicative and change fast — always confirm with the airline before booking.
+    </p>
   </footer>
 
   <script src="./app.js" defer></script>

@@ -1,182 +1,204 @@
 /* ============================================================
-   Eitiltí Saora — minimalist cheap-flights tracker
-   Monochrome palette + a single muted amber accent.
+   Eitiltí Saora — Swiss-editorial minimalism
+   Warm off-white paper, near-black ink, one lime accent.
+   System fonts + one local photo only → zero remote requests.
    ============================================================ */
 
 :root {
-  --ink: #111111;          /* near-black text          */
-  --ink-soft: #555555;     /* secondary text           */
-  --ink-faint: #6a6a6a;    /* muted labels / badges (AA-contrast on white) */
-  --paper: #ffffff;        /* primary surface          */
-  --paper-2: #fafafa;      /* very-light surface        */
-  --line: #ececec;         /* hairline borders         */
-  --accent: #b8742a;       /* muted amber — used sparingly */
-  --accent-ink: #94591e;   /* darker amber for links on white */
-  --hero-fallback: #1c1f24; /* solid dark fallback for hero */
-  --radius: 12px;
-  --maxw: 880px;
+  --paper: #f2f1ec;        /* warm off-white background        */
+  --paper-2: #ebeae4;      /* slightly deeper surface          */
+  --ink: #121212;          /* near-black text + display        */
+  --ink-soft: #5f5f59;     /* muted intro / meta (AA on paper) */
+  --ink-faint: #6c6c66;    /* faint labels / badges            */
+  --line: #dcdbd4;         /* hairlines                        */
+  --accent: #c6f24a;       /* lime — used sparingly            */
+  --accent-deep: #7c9c12;  /* lime for text on paper (AA)      */
+  --maxw: 1320px;
+  --gutter: clamp(20px, 5vw, 72px);
 }
 
-/* ---------- Reset-ish ---------- */
 *,
 *::before,
-*::after {
-  box-sizing: border-box;
-}
+*::after { box-sizing: border-box; }
 
-html {
-  -webkit-text-size-adjust: 100%;
-}
+html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
-  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: var(--paper);
-  line-height: 1.6;
+  color: var(--ink);
+  line-height: 1.55;
   font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* Visible, calm focus state for keyboard users */
 :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 4px;
+  /* Ink (16.6:1 on paper) — lime fails the 3:1 non-text-contrast minimum. */
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
 }
 
-/* ---------- Hero ---------- */
+.dot { color: var(--accent); }   /* the one bright-lime signature accent */
+
+/* ============================ HERO ============================ */
 .hero {
-  /* Layered backgrounds form a graceful fallback chain (topmost first):
-     dark overlay → local airplane photo → stock photo → solid dark colour.
-     If the local photo 404s, its layer is simply empty and the stock photo
-     shows through; if both fail, the solid colour keeps the title legible. */
-  background-color: var(--hero-fallback);
-  background-image:
-    linear-gradient(rgba(17, 19, 24, 0.45), rgba(17, 19, 24, 0.55)),
-    url("./assets/Airplane.jpg"),
-    url("https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1600&q=80");
-  background-size: cover;
-  background-position: center;
-  filter: none;
-  min-height: 42vh;
-  display: flex;
-  align-items: flex-end;
-  color: #ffffff;
-}
-
-.hero__inner {
-  width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 0 24px 40px;
+  padding: clamp(20px, 4vw, 48px) var(--gutter) clamp(24px, 4vw, 56px);
+  min-height: min(88vh, 840px);
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "kicker intro"
+    "title  photo";
+  column-gap: clamp(24px, 5vw, 80px);
+  row-gap: clamp(24px, 3vw, 40px);
+}
+
+.hero__kicker {
+  grid-area: kicker;
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  align-self: start;
+}
+
+.hero__intro {
+  grid-area: intro;
+  margin: 0;
+  max-width: 38ch;
+  justify-self: end;
+  align-self: start;
+  font-size: clamp(1rem, 1.35vw, 1.2rem);
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.hero__figure {
+  grid-area: photo;
+  margin: 0;
+  align-self: end;   /* photo anchors to the bottom, beside the headline */
+  min-width: 0;
+}
+
+.hero__photo {
+  width: 100%;
+  /* Definite height so the photo is a clean block — never letterboxed by the
+     grid cell (object-fit:cover crops instead of leaving a background gap). */
+  height: clamp(300px, 48vh, 540px);
+  object-fit: cover;
+  display: block;
+  /* Editorial black-and-white treatment, no external image needed. */
+  filter: grayscale(1) contrast(1.04) brightness(1.01);
+  background: var(--paper-2);
 }
 
 .hero__title {
+  grid-area: title;
+  align-self: end;
   margin: 0;
-  font-size: clamp(2.4rem, 7vw, 4rem);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
-  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.35);
+  font-size: clamp(3.4rem, 13vw, 11rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.9;
+  text-transform: none;
 }
 
-.hero__tagline {
-  margin: 0.5rem 0 0;
-  font-size: clamp(1rem, 2.2vw, 1.15rem);
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.88);
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.4);
-}
-
-/* ---------- Page shell ---------- */
+/* ============================ PAGE =========================== */
 .page {
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 40px 24px 24px;
+  padding: clamp(32px, 5vw, 72px) var(--gutter) 0;
 }
 
-/* ---------- Controls ---------- */
+/* ---------- Controls (editorial underline style) ---------- */
 .controls {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  margin-bottom: 28px;
+  gap: 22px;
+  padding-bottom: 26px;
+  border-bottom: 1.5px solid var(--ink);
 }
 
 .controls__filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px 22px;
+  gap: 18px 32px;
   align-items: flex-end;
 }
 
 .control {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
   min-width: 0;
 }
 
 .control__label {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
+  font-weight: 700;
   color: var(--ink-faint);
-  font-weight: 600;
 }
 
 .control__input {
   font: inherit;
   color: var(--ink);
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 12px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1.5px solid var(--ink);
+  border-radius: 0;
+  padding: 7px 2px;
   width: 100%;
   transition: border-color 0.15s ease;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
-.control__input:hover {
-  border-color: #d6d6d6;
-}
+.control__input:hover { border-color: var(--accent-deep); }
+.control__input:focus { border-color: var(--ink); border-bottom-width: 2.5px; }
 
-.control__input:focus {
-  border-color: var(--accent);
-  outline: none;
-}
-
-/* The search field gets a little more room */
-.controls__search .control__input {
-  max-width: 100%;
-}
+.controls__search .control__input { font-size: 1.05rem; }
 
 select.control__input {
   cursor: pointer;
-  /* keep native control but remove default OS heaviness where possible */
-  min-width: 120px;
+  min-width: 150px;
+  /* simple chevron, drawn with a gradient so no image request */
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ink) 50%),
+    linear-gradient(135deg, var(--ink) 50%, transparent 50%);
+  background-position: calc(100% - 9px) 1.05em, calc(100% - 4px) 1.05em;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 22px;
 }
 
-/* Direct-only checkbox sits inline */
 .control--check {
   flex-direction: row;
   align-items: center;
-  gap: 9px;
-  padding-bottom: 8px;
+  gap: 10px;
+  padding-bottom: 6px;
   cursor: pointer;
 }
 
 .control--check .control__label {
   text-transform: none;
   letter-spacing: 0;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 500;
   color: var(--ink);
 }
 
 .control__check {
-  width: 17px;
-  height: 17px;
-  accent-color: var(--accent);
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-deep);
   cursor: pointer;
   margin: 0;
 }
@@ -187,16 +209,14 @@ select.control__input {
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: baseline;
-  gap: 6px 16px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 6px;
+  gap: 6px 20px;
+  padding: 18px 0 4px;
 }
 
 .status__count {
   margin: 0;
-  font-weight: 600;
-  font-size: 0.95rem;
+  font-weight: 700;
+  font-size: 1rem;
 }
 
 .status__updated {
@@ -213,145 +233,136 @@ select.control__input {
 }
 
 .deal {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 22px 4px;
-  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--line);
 }
+.deal:last-child { border-bottom: 1px solid var(--line); }
 
-.deal__main {
-  min-width: 0;
+.deal article {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 26px 4px;
+  transition: padding-left 0.18s ease;
 }
+.deal article:hover { padding-left: 14px; }
+
+.deal__main { min-width: 0; }
 
 .deal__route {
   margin: 0;
-  font-size: 1.12rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-size: clamp(1.4rem, 2.4vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
 }
 
 .deal__sub {
-  margin: 2px 0 0;
+  margin: 6px 0 0;
   color: var(--ink-soft);
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
 .deal__badges {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
 .badge {
   font-size: 0.74rem;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
   color: var(--ink-faint);
-  background: var(--paper-2);
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 3px 10px;
+  padding: 3px 11px;
   white-space: nowrap;
 }
 
 .deal__found {
-  margin: 10px 0 0;
+  margin: 12px 0 0;
   font-size: 0.78rem;
   color: var(--ink-faint);
 }
 
-/* Right column: price + action */
 .deal__aside {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 10px;
+  gap: 12px;
   flex-shrink: 0;
   text-align: right;
 }
 
 .deal__price {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--accent);
+  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
   white-space: nowrap;
 }
 
 .deal__view {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--accent-ink);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--ink);
   text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.15s ease;
+  /* Resting state stays monochrome; bright lime is reserved for interaction so
+     it reads as a single accent, not a repeating column down the list. */
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 1px;
+  transition: background-color 0.15s ease;
   white-space: nowrap;
 }
+.deal__view:hover,
+.deal__view:focus-visible { background-color: var(--accent); }
 
-.deal__view:hover {
-  border-bottom-color: var(--accent-ink);
-}
-
-/* ---------- Empty / error state ---------- */
+/* ---------- Empty / error ---------- */
 .empty {
   text-align: center;
-  padding: 64px 16px;
+  padding: 72px 16px;
   color: var(--ink-soft);
 }
-
 .empty__title {
   margin: 0 0 6px;
-  font-size: 1.15rem;
-  font-weight: 600;
+  font-size: 1.2rem;
+  font-weight: 700;
   color: var(--ink);
 }
-
-.empty__text {
-  margin: 0;
-  font-size: 0.95rem;
-}
+.empty__text { margin: 0; font-size: 0.98rem; }
 
 /* ---------- Footer ---------- */
 .footer {
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 32px 24px 56px;
+  padding: clamp(40px, 6vw, 80px) var(--gutter) 64px;
   color: var(--ink-faint);
-  font-size: 0.8rem;
+  font-size: 0.84rem;
 }
+.footer p { margin: 0; max-width: 60ch; }
+.footer__mark { font-weight: 700; color: var(--ink); margin-right: 6px; }
 
-.footer p {
-  margin: 0;
-}
-
-/* ---------- Responsive ---------- */
-@media (max-width: 560px) {
-  .page {
-    padding-top: 28px;
+/* ============================ RESPONSIVE ============================ */
+@media (max-width: 880px) {
+  .hero {
+    min-height: 0;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "kicker"
+      "title"
+      "intro"
+      "photo";
+    row-gap: 22px;
   }
+  .hero__figure { align-self: start; }
+  .hero__intro { justify-self: start; max-width: 46ch; }
+  .hero__photo { height: clamp(240px, 40vh, 420px); }
 
-  .controls__filters {
-    gap: 14px 16px;
-  }
-
-  /* Selects share the row two-up on small screens */
-  .controls__filters .control {
-    flex: 1 1 132px;
-  }
-
-  .control--check {
-    flex: 1 1 100%;
-    padding-bottom: 0;
-  }
-
-  /* Stack deal price above the details for breathing room */
-  .deal {
+  .deal article {
     flex-direction: column;
-    gap: 12px;
+    align-items: flex-start;
+    gap: 16px;
   }
-
   .deal__aside {
     flex-direction: row;
     align-items: center;
@@ -361,9 +372,6 @@ select.control__input {
   }
 }
 
-/* Respect reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  * {
-    transition: none !important;
-  }
+  * { transition: none !important; }
 }

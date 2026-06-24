@@ -622,6 +622,23 @@ def format_ryanair_price(price):
     return f"{currency} {value:.2f}"
 
 
+# Locale path used in Ryanair booking URLs, per origin (drives site language).
+RYANAIR_BOOKING_MARKETS = {"DUB": "ie/en", "BFS": "gb/en", "BHD": "gb/en"}
+
+
+def ryanair_booking_url(origin, destination, depart, ret):
+    """Deep link to Ryanair's booking page pre-filled with this exact return
+    trip, so the alert/site 'View' opens the flight rather than the homepage."""
+    market = RYANAIR_BOOKING_MARKETS.get((origin or "").upper(), "ie/en")
+    params = {
+        "adults": "1", "teens": "0", "children": "0", "infants": "0",
+        "dateOut": depart.isoformat(), "dateIn": ret.isoformat(),
+        "originIata": origin, "destinationIata": destination,
+        "isReturn": "true", "discount": "0",
+    }
+    return f"https://www.ryanair.com/{market}/trip/flights/select?{urllib.parse.urlencode(params)}"
+
+
 def normalize_ryanair_fare(fare):
     outbound = fare.get("outbound") or {}
     inbound = fare.get("inbound") or {}
@@ -658,6 +675,9 @@ def normalize_ryanair_fare(fare):
         "stops": "Non-stop",
         "route": f"{origin_code} - {destination_code}",
         "duration": f"{outbound_flight} / {inbound_flight}",
+        "url": ryanair_booking_url(
+            origin_code, destination_code, outbound_departure.date(), inbound_departure.date()
+        ),
         "start_date": outbound_departure.date(),
         "end_date": inbound_departure.date(),
     }
