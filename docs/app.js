@@ -173,8 +173,7 @@
       // Max price in EUR (normalised value).
       if (maxPrice !== "any") {
         var cap = parseFloat(maxPrice);
-        var p = typeof d.price_eur === "number" ? d.price_eur : Infinity;
-        if (p > cap) {
+        if (priceEur(d) > cap) {
           return false;
         }
       }
@@ -192,6 +191,13 @@
     updateStatus(filtered.length);
   }
 
+  // A deal's EUR price for ranking/filtering. A missing, non-numeric or
+  // non-positive value is treated as "unknown" (Infinity) so such deals are
+  // excluded by a max-price cap and sorted last instead of masquerading as €0.
+  function priceEur(d) {
+    return typeof d.price_eur === "number" && d.price_eur > 0 ? d.price_eur : Infinity;
+  }
+
   function sortDeals(list, mode) {
     if (mode === "soonest") {
       // Earliest departure first.
@@ -206,9 +212,7 @@
     } else {
       // Default: cheapest by normalised EUR value, ascending.
       list.sort(function (a, b) {
-        var pa = typeof a.price_eur === "number" ? a.price_eur : Infinity;
-        var pb = typeof b.price_eur === "number" ? b.price_eur : Infinity;
-        return pa - pb;
+        return priceEur(a) - priceEur(b);
       });
     }
   }

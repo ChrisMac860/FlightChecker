@@ -6,7 +6,7 @@
 :root {
   --ink: #111111;          /* near-black text          */
   --ink-soft: #555555;     /* secondary text           */
-  --ink-faint: #888888;    /* muted labels / badges    */
+  --ink-faint: #6a6a6a;    /* muted labels / badges (AA-contrast on white) */
   --paper: #ffffff;        /* primary surface          */
   --paper-2: #fafafa;      /* very-light surface        */
   --line: #ececec;         /* hairline borders         */

@@ -516,10 +516,15 @@ def add_filter_details(deal, context_date, context_text, month_gated=True):
     start_date, end_date = dates
     nights = (end_date - start_date).days
     days_off = count_days_off(start_date, end_date)
-    destination = deal.get("destination") or destination_from_deal(deal, context_text)
+    # Resolve the curated key from the route's IATA code, because the fare API's
+    # display city ('Kraków', 'Bergamo', 'Milan Bergamo') may not match the
+    # DESTINATION_MONTHS keys ('Krakow', 'Milan'). Keep the city for display.
+    resolved = destination_from_deal(deal, context_text)
+    destination = deal.get("destination") or resolved
+    month_destination = resolved or destination
     if "price_eur" not in deal and "price_value" in deal:
         deal["price_eur"] = to_eur(deal["price_value"], deal.get("currency", "EUR"))
-    allowed_months = DESTINATION_MONTHS.get(destination, set())
+    allowed_months = DESTINATION_MONTHS.get(month_destination, set())
     if month_gated:
         month_allowed = bool(allowed_months) and overlaps_allowed_month(start_date, end_date, allowed_months)
     else:
@@ -540,7 +545,7 @@ def add_filter_details(deal, context_date, context_text, month_gated=True):
         deal["filter_reason"] = "destination not configured"
     elif not month_allowed:
         deal["filter_reason"] = (
-            f"{destination} is only enabled for {format_months(allowed_months)} "
+            f"{month_destination} is only enabled for {format_months(allowed_months)} "
             f"(with {MONTH_OVERFLOW_DAYS}-day overflow)"
         )
     else:
@@ -1377,6 +1382,21 @@ def deals_log_path():
     return value.strip()
 
 
+# City display name -> canonical IATA code, for resolving email-alert routes
+# (Google Flights / Skyscanner) that use city names rather than codes. Keyed by
+# normalize_city_name output so accents/case don't matter.
+CITY_TO_AIRPORT = {
+    "dublin": "DUB",
+    "belfast": "BFS",
+    "copenhagen": "CPH",
+    "budapest": "BUD",
+    "krakow": "KRK",
+    "milan": "MIL",
+    "riga": "RIX",
+    "barcelona": "BCN",
+}
+
+
 def split_route_codes(route):
     """Best-effort (origin_code, destination_code) from a 'DUB - BCN' route."""
     match = re.search(r"\b([A-Z]{3})\b\s*(?:->|-|–|to)\s*\b([A-Z]{3})\b", route or "", re.I)
@@ -1385,25 +1405,89 @@ def split_route_codes(route):
     return "", ""
 
 
+def place_to_code(place):
+    """Resolve a 3-letter code or a city name to an IATA code (best effort)."""
+    place = (place or "").strip()
+    if re.fullmatch(r"[A-Za-z]{3}", place):
+        return place.upper()
+    return CITY_TO_AIRPORT.get(normalize_city_name(place), "")
+
+
+def resolve_route_codes(route):
+    """(origin_code, destination_code) from a route that may use codes or city
+    names, e.g. 'DUB - CPH' or 'Dublin -> Copenhagen'. Empty strings if a side
+    can't be resolved."""
+    origin, destination = split_route_codes(route)
+    if origin and destination:
+        return origin, destination
+    parts = re.split(r"\s*(?:->|→|to|-|–)\s*", route or "", maxsplit=1, flags=re.I)
+    if len(parts) == 2:
+        return place_to_code(parts[0]), place_to_code(parts[1])
+    return origin, destination
+
+
+def parse_price_string(price):
+    """Extract (value, currency) from a display price like '£80' or 'EUR 89.98'.
+    Email alerts carry only this string; the API sources already set numbers."""
+    if not price:
+        return None, None
+    text = price.strip()
+    currency = None
+    for token, code in (("US$", "USD"), ("GBP", "GBP"), ("EUR", "EUR"), ("USD", "USD"),
+                        ("£", "GBP"), ("€", "EUR"), ("$", "USD")):
+        if token in text:
+            currency = code
+            break
+    number = re.search(r"\d{1,4}(?:[.,]\d{2})?", text)
+    if not number:
+        return None, currency
+    return float(number.group(0).replace(",", ".")), currency
+
+
+def deal_numeric_price(deal):
+    """(price_value, price_eur, currency) for a deal, parsing the display price
+    string when the source (email) didn't supply numbers. Returns None values if
+    no price can be determined."""
+    price_value = deal.get("price_value")
+    currency = deal.get("currency")
+    if price_value is None:
+        price_value, parsed_currency = parse_price_string(deal.get("price"))
+        currency = currency or parsed_currency
+    currency = currency or "EUR"
+    price_eur = deal.get("price_eur")
+    if price_eur is None and price_value is not None:
+        price_eur = to_eur(price_value, currency)
+    return price_value, (round(price_eur, 2) if price_eur is not None else None), currency
+
+
 def deal_identity(deal):
     """Source-agnostic identity used to upsert the log: the same trip from any
     source (or run) maps to the same key, so re-seeing it replaces in place."""
     key = deal.get("dedupe_key")
     if key:
         return key
-    origin, destination = split_route_codes(deal.get("route"))
     start = deal.get("start_date")
     end = deal.get("end_date")
     start_iso = start.isoformat() if isinstance(start, dt.date) else str(deal.get("dates") or "")
     end_iso = end.isoformat() if isinstance(end, dt.date) else ""
-    return f"{origin}-{destination}:{start_iso}:{end_iso}"
+    origin, destination = resolve_route_codes(deal.get("route"))
+    if origin and destination:
+        return f"{origin}-{destination}:{start_iso}:{end_iso}"
+    # No resolvable codes (e.g. an unknown city in an email alert): fall back to a
+    # slug of the route so distinct destinations on the same dates don't collide.
+    slug = re.sub(r"[^a-z0-9]+", "-", normalize_alert_text(deal.get("route") or "").lower()).strip("-")
+    return f"{slug or 'unknown'}:{start_iso}:{end_iso}"
 
 
 def deal_to_log_entry(deal, now_iso):
-    origin, destination_code = split_route_codes(deal.get("route"))
+    origin, destination_code = resolve_route_codes(deal.get("route"))
     start = deal.get("start_date")
     end = deal.get("end_date")
-    route = (deal.get("route") or "").replace(" - ", " → ").replace("->", "→")
+    if origin and destination_code:
+        route = f"{origin} → {destination_code}"
+    else:
+        route = (deal.get("route") or "").replace(" - ", " → ").replace("->", "→")
+    price_value, price_eur, currency = deal_numeric_price(deal)
     return {
         "id": deal_identity(deal),
         "origin": origin,
@@ -1417,9 +1501,9 @@ def deal_to_log_entry(deal, now_iso):
         "nights": deal.get("nights"),
         "days_off": deal.get("days_off"),
         "price": deal.get("price") or "",
-        "price_value": deal.get("price_value"),
-        "price_eur": round(deal_price_eur(deal), 2),
-        "currency": deal.get("currency") or "EUR",
+        "price_value": price_value,
+        "price_eur": price_eur,
+        "currency": currency,
         "airline": deal.get("airline") or "",
         "stops": deal.get("stops") or "",
         "source": deal.get("source") or "gmail",
@@ -1459,10 +1543,14 @@ def upsert_deals_log(log, deals, now_iso):
         entry["first_seen"] = existing.get("first_seen", now_iso)
         entry["seen_count"] = int(existing.get("seen_count", 1)) + 1
         entry["last_seen"] = now_iso
+        # Keep the cheapest sighting's price + display block together. A None
+        # price_eur (unparseable) is treated as more expensive than any number.
         existing_eur = existing.get("price_eur")
-        if existing_eur is not None and existing_eur <= entry["price_eur"]:
-            for field in ("price", "price_value", "price_eur", "currency",
-                          "airline", "stops", "source", "url", "destination"):
+        new_eur = entry.get("price_eur")
+        keep_existing = existing_eur is not None and (new_eur is None or existing_eur <= new_eur)
+        if keep_existing:
+            for field in ("price", "price_value", "price_eur", "currency", "airline",
+                          "stops", "source", "url", "destination", "destination_code", "route"):
                 entry[field] = existing.get(field, entry[field])
         log[deal_id] = entry
     return log

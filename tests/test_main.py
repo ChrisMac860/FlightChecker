@@ -336,6 +336,7 @@ class GmailAlertParserTests(unittest.TestCase):
 
         self.assertEqual(send_telegram.call_count, 1)
         self.assertIn(("fallback-google", "+FLAGS", "\\Seen"), fake_imap.stored_flags)
+        self.assertIn(("fallback-google", "+X-GM-LABELS", '"FlightChecker/Processed"'), fake_imap.stored_flags)
         self.assertIn(("UNSEEN",), fake_imap.search_args)
         self.assertIn(
             ("UNSEEN", "FROM", '"noreply-travel@google.com"'),
@@ -656,6 +657,89 @@ class TelegramChunkTests(unittest.TestCase):
         chunks = main.chunk_telegram_text(text, limit=4096)
         self.assertTrue(all(len(chunk) <= 4096 for chunk in chunks))
         self.assertEqual("".join(chunks), text)
+
+
+class ReviewRegressionTests(unittest.TestCase):
+    """Regressions found by the adversarial review of the refactor."""
+
+    def test_curated_month_gating_resolves_city_via_iata_code(self):
+        # The fare API's display city ('Kraków', 'Bergamo') must not defeat
+        # month-gating: it is resolved to the curated key via the route's code.
+        for city, route in (("Kraków", "DUB - KRK"), ("Bergamo", "DUB - BGY"),
+                            ("Milan Bergamo", "DUB - BGY")):
+            deal = {
+                "destination": city, "route": route,
+                "price_value": 45.0, "currency": "EUR",
+                "start_date": dt.date(2026, 9, 4), "end_date": dt.date(2026, 9, 6),
+            }
+            detailed = main.add_filter_details(deal, dt.date(2026, 6, 1), "", month_gated=True)
+            self.assertTrue(detailed["eligible"], f"{city} should be in-season in September")
+
+    def test_email_city_name_deals_logged_with_distinct_ids_and_real_price(self):
+        body = skyscanner_real_alert_body()
+        deals = main.parse_flight_deals(
+            body, subject="✈️ Latest prices for your flights",
+            from_header="Skyscanner <no-reply@sender.skyscanner.com>",
+        )
+        matching, _ = main.filter_deals(deals, body)
+        self.assertGreaterEqual(len(matching), 2)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "deals.json")
+            with patch.dict(os.environ, {"DEALS_LOG_FILE": path}):
+                main.record_deals_to_log(matching, today=dt.date(2026, 6, 11),
+                                         now_iso="2026-06-11T09:00:00Z")
+            data = json.load(open(path, encoding="utf-8"))
+        ids = [d["id"] for d in data["deals"]]
+        self.assertEqual(len(ids), len(set(ids)), "distinct destinations must not collide on one id")
+        for d in data["deals"]:
+            self.assertGreater(d["price_eur"], 0, "email deals must get a real EUR price, not 0.0")
+            self.assertEqual(d["origin"], "DUB")
+            self.assertTrue(d["destination_code"], "city-name route must resolve to a code")
+
+    def test_run_ryanair_does_not_commit_state_when_send_fails(self):
+        deal = {
+            "dedupe_key": "DUB-BCN:2026-09-04:2026-09-06", "source": "ryanair",
+            "destination": "Barcelona", "route": "DUB - BCN", "price": "EUR 45.00",
+            "dates": "Fri 4 Sep - Sun 6 Sep", "duration": "FR1 / FR2",
+            "price_value": 45.0, "price_eur": 45.0, "currency": "EUR", "airline": "Ryanair",
+            "stops": "Non-stop", "nights": 2, "days_off": 1,
+            "start_date": dt.date(2026, 9, 4), "end_date": dt.date(2026, 9, 6),
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            state_path = os.path.join(tmp, "seen.json")
+            env = {"STATE_FILE": state_path, "DEALS_LOG_FILE": "",
+                   "TELEGRAM_BOT_TOKEN": "t", "TELEGRAM_CHAT_ID": "c", "PRICE_DROP_EUR": "5"}
+            with patch.dict(os.environ, env, clear=True):
+                with patch.object(main, "collect_ryanair_deals", return_value=[deal]):
+                    with patch.object(main, "send_telegram_message", side_effect=RuntimeError("boom")):
+                        with self.assertRaises(RuntimeError):
+                            main.run_ryanair_source(dry_run=False)
+            self.assertFalse(os.path.exists(state_path), "a failed send must not commit alert state")
+
+    def test_ryanair_and_aviasales_share_dedupe_key_for_same_trip(self):
+        fare = {
+            "outbound": {
+                "departureAirport": {"iataCode": "DUB"},
+                "arrivalAirport": {"iataCode": "BCN", "city": {"name": "Barcelona"}},
+                "departureDate": "2026-09-04T08:00:00", "flightNumber": "FR1",
+            },
+            "inbound": {
+                "departureAirport": {"iataCode": "BCN"},
+                "arrivalAirport": {"iataCode": "DUB"},
+                "departureDate": "2026-09-06T20:00:00", "flightNumber": "FR2",
+            },
+            "summary": {"price": {"value": 45.0, "currencyCode": "EUR"}},
+        }
+        offer = {
+            "origin": "DUB", "destination": "BCN", "price": 47.0, "airline": "VY",
+            "flight_number": 9, "departure_at": "2026-09-04T18:25:00+03:00",
+            "return_at": "2026-09-06T21:00:00+03:00", "transfers": 0,
+            "link": "/search/x", "currency": "eur",
+        }
+        rk = main.normalize_ryanair_fare(fare)["dedupe_key"]
+        ak = main.normalize_aviasales_offer(offer)["dedupe_key"]
+        self.assertEqual(rk, ak)
+        self.assertEqual(rk, "DUB-BCN:2026-09-04:2026-09-06")
 
 
 class FakeImap:

@@ -18,7 +18,9 @@ jobs:
     permissions:
       contents: write
     concurrency:
-      group: flight-alerts-gmail
+      # Shared with the API job so the two never push to docs/deals.json
+      # concurrently (which would force a conflicting rebase on a generated file).
+      group: flight-alerts-push
       cancel-in-progress: false
 
     steps:
@@ -43,7 +45,7 @@ jobs:
         run: python main.py
 
       - name: Publish email deals to the site
-        if: ${{ github.event_name == 'schedule' }}
+        if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
         env:
           GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
@@ -57,8 +59,9 @@ jobs:
           git commit -m "chore: publish email flight deals [skip ci]"
           for attempt in 1 2 3 4 5; do
             if git push; then echo "Pushed on attempt $attempt"; exit 0; fi
-            echo "Push failed (attempt $attempt); rebasing on latest ${GITHUB_REF_NAME}…"
-            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" || true
+            echo "Push rejected (attempt $attempt); syncing with ${GITHUB_REF_NAME}…"
+            git rebase --abort 2>/dev/null || true
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" || git rebase --abort 2>/dev/null || true
           done
           echo "Failed to push after retries" >&2
           exit 1
@@ -69,7 +72,7 @@ jobs:
     permissions:
       contents: write
     concurrency:
-      group: flight-alerts-state
+      group: flight-alerts-push
       cancel-in-progress: false
 
     steps:
@@ -102,7 +105,7 @@ jobs:
         run: python main.py
 
       - name: Persist deal log + state (dedupe + keepalive)
-        if: ${{ github.event_name == 'schedule' }}
+        if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
         env:
           GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
@@ -118,8 +121,9 @@ jobs:
           git commit -m "chore: update flight deals + state [skip ci]"
           for attempt in 1 2 3 4 5; do
             if git push; then echo "Pushed on attempt $attempt"; exit 0; fi
-            echo "Push failed (attempt $attempt); rebasing on latest ${GITHUB_REF_NAME}…"
-            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" || true
+            echo "Push rejected (attempt $attempt); syncing with ${GITHUB_REF_NAME}…"
+            git rebase --abort 2>/dev/null || true
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" || git rebase --abort 2>/dev/null || true
           done
           echo "Failed to push after retries" >&2
           exit 1
