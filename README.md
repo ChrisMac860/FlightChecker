@@ -7,13 +7,13 @@ Everything runs for free: make the repository **public** so GitHub Actions minut
 ## Architecture
 
 - **Gmail source** runs every 15 minutes for Google Flights and Skyscanner email alerts.
-- **Ryanair + Aviasales sources** run daily at 07:00 UTC.
+- **Ryanair + Aviasales sources** run every 4 hours.
 - `main.py` selects sources from `FLIGHT_SOURCES`.
 - Gmail connects through IMAP, parses unread Google Flights and Skyscanner messages, sends matching Telegram alerts, and marks processed messages read + tags them with a processed label (so a future parser fix can recover anything it consumed).
 - Ryanair queries the round-trip fare finder **once per origin per month window with no fixed destination**, so a single call returns the cheapest fares to every reachable city. This replaced the old per-destination fan-out (hundreds of calls/run that also silently capped coverage to the alphabetically-first destinations). It then applies the weekend trip filters and sends one compact Telegram digest with the cheapest trip per destination.
 - Aviasales (Travelpayouts) queries cached cheapest round-trip prices across many airlines (Aer Lingus, Wizz, easyJet, Vueling…) for breadth Ryanair's own API misses.
 - The API sources persist a small state file (`state/seen_deals.json`) so you are only alerted about **new** or **price-dropped** trips, never the same digest twice. De-duplication is **source-agnostic** (a trip found by both Ryanair and Aviasales alerts once) and state is committed **only after a Telegram send succeeds**, so a failed delivery never suppresses a future re-alert. The daily commit also keeps the repo active so GitHub does not auto-disable the scheduled workflow after 60 days.
-- Every eligible deal from every source is also logged to `docs/deals.json`, which powers the **Eitiltí Saora** web page (see below). Deals are upserted by a source-agnostic identity: re-seeing the same trip refreshes it in place (timestamp/price, cheapest kept) instead of duplicating, and past trips are pruned.
+- Every eligible deal from every source is also logged to `docs/deals.json`, which powers the **Eitiltí Saora** web page (see below). Deals are upserted by a source-agnostic identity: re-seeing the same trip refreshes it in place (timestamp/price, cheapest kept) instead of duplicating. Past trips are pruned, and any deal not re-seen within 8 hours (roughly two scans) is dropped, so the page only lists fares that are still current.
 
 ## Web page (Eitiltí Saora)
 

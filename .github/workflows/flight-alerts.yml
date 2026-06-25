@@ -3,7 +3,7 @@ name: Flight Alert Bot
 on:
   schedule:
     - cron: "*/15 * * * *"      # Gmail email alerts
-    - cron: "0 */6 * * *"       # Ryanair + Aviasales fare scan, 4x/day
+    - cron: "0 */4 * * *"       # Ryanair + Aviasales fare scan, every 4h
   workflow_dispatch:
     inputs:
       flight_sources:
@@ -67,7 +67,7 @@ jobs:
           exit 1
 
   check-api-fares:
-    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 */6 * * *') || (github.event_name == 'workflow_dispatch' && (contains(inputs.flight_sources, 'ryanair') || contains(inputs.flight_sources, 'aviasales'))) }}
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 */4 * * *') || (github.event_name == 'workflow_dispatch' && (contains(inputs.flight_sources, 'ryanair') || contains(inputs.flight_sources, 'aviasales'))) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

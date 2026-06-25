@@ -588,6 +588,18 @@ class DealsLogTests(unittest.TestCase):
         self.assertIn("future", pruned)
         self.assertNotIn("past", pruned)
 
+    def test_prune_drops_deals_not_seen_within_max_age(self):
+        now = dt.datetime(2026, 6, 24, 12, 0, 0, tzinfo=dt.timezone.utc)
+        log = {
+            "fresh": {"id": "fresh", "return_date": "2026-09-06",
+                      "last_seen": "2026-06-24T11:00:00Z", "price_eur": 50.0},
+            "stale": {"id": "stale", "return_date": "2026-09-06",
+                      "last_seen": "2026-06-24T01:00:00Z", "price_eur": 50.0},
+        }
+        pruned = main.prune_deals_log(log, dt.date(2026, 6, 24), now=now)
+        self.assertIn("fresh", pruned)      # seen 1h ago
+        self.assertNotIn("stale", pruned)   # seen 11h ago (> 8h window)
+
     def test_record_writes_full_schema(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = os.path.join(tmp, "deals.json")

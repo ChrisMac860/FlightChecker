@@ -245,6 +245,10 @@ PRICE_DROP_DEFAULT_EUR = 5.0
 # same trip refreshes it in place (timestamp/price) instead of duplicating.
 DEALS_LOG_DEFAULT_PATH = "docs/deals.json"
 
+# Drop deals not re-seen within this many hours, so the page only lists fares
+# that are still current (a deal missing from the last ~2 scans falls off).
+DEALS_LOG_MAX_AGE_HOURS = 8
+
 # Display city for the (few) origin airports we fly from.
 ORIGIN_CITIES = {
     "DUB": "Dublin",
@@ -1585,14 +1589,23 @@ def upsert_deals_log(log, deals, now_iso):
     return log
 
 
-def prune_deals_log(log, today):
-    """Drop trips whose return date is in the past."""
+def prune_deals_log(log, today, now=None, max_age_hours=DEALS_LOG_MAX_AGE_HOURS):
+    """Drop trips whose return date is in the past, and (when `now` is given)
+    trips not re-seen within max_age_hours, so stale fares fall off the page."""
     today_iso = today.isoformat()
+    cutoff_iso = None
+    if now is not None and max_age_hours:
+        cutoff = now - dt.timedelta(hours=max_age_hours)
+        cutoff_iso = cutoff.replace(microsecond=0).isoformat().replace("+00:00", "Z")
     kept = {}
     for deal_id, entry in log.items():
         return_date = entry.get("return_date") or ""
         if return_date and return_date < today_iso:
             continue
+        if cutoff_iso is not None:
+            last_seen = entry.get("last_seen") or ""
+            if last_seen and last_seen < cutoff_iso:
+                continue
         kept[deal_id] = entry
     return kept
 
@@ -1622,9 +1635,10 @@ def record_deals_to_log(deals, today=None, now_iso=None):
         return None
     today = today or dt.date.today()
     now_iso = now_iso or utc_now_iso()
+    now_dt = dt.datetime.fromisoformat(now_iso.replace("Z", "+00:00"))
     log = load_deals_log(path)
     upsert_deals_log(log, deals, now_iso)
-    log = prune_deals_log(log, today)
+    log = prune_deals_log(log, today, now=now_dt)
     write_deals_log(path, log, now_iso)
     return path
 
