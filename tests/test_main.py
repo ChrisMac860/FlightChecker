@@ -733,7 +733,10 @@ class ReviewRegressionTests(unittest.TestCase):
         url = main.normalize_ryanair_fare(fare)["url"]
         self.assertTrue(url.startswith("https://www.ryanair.com/ie/en/trip/flights/select?"))
         for fragment in ("originIata=DUB", "destinationIata=BUD",
-                         "dateOut=2026-09-05", "dateIn=2026-09-07", "isReturn=true"):
+                         "dateOut=2026-09-05", "dateIn=2026-09-07", "isReturn=true",
+                         # trip params Ryanair's SPA needs to open the RETURN search
+                         "tpOriginIata=DUB", "tpDestinationIata=BUD",
+                         "tpStartDate=2026-09-05", "tpEndDate=2026-09-07"):
             self.assertIn(fragment, url)
 
     def test_ryanair_and_aviasales_share_dedupe_key_for_same_trip(self):

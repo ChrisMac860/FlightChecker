@@ -291,6 +291,9 @@
 
     // Native price string (e.g. "EUR 45.00" / "GBP 24.99").
     aside.appendChild(makeEl("div", "deal__price", d.price || ""));
+    // Make clear it's the round-trip total and that fares are indicative —
+    // the live airline price can drift from this cached fare.
+    aside.appendChild(makeEl("div", "deal__pricenote", "return · indicative"));
 
     // "View" link only when we have a safe http(s) url.
     var href = safeHttpUrl(d.url);

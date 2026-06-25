@@ -302,6 +302,13 @@ select.control__input {
   white-space: nowrap;
 }
 
+.deal__pricenote {
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
 .deal__view {
   font-size: 0.92rem;
   font-weight: 700;

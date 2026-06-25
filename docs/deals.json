@@ -21,7 +21,7 @@
       "airline": "Ryanair",
       "stops": "Non-stop",
       "source": "ryanair",
-      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-09-11&dateIn=2026-09-13&originIata=DUB&destinationIata=RIX&isReturn=true&discount=0",
+      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-09-11&dateIn=2026-09-13&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=RIX&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-09-11&tpEndDate=2026-09-13&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=RIX",
       "first_seen": "2026-06-18T07:00:12Z",
       "last_seen": "2026-06-24T07:00:00Z",
       "seen_count": 6
@@ -45,7 +45,7 @@
       "airline": "Ryanair",
       "stops": "Non-stop",
       "source": "ryanair",
-      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-09&dateIn=2026-10-11&originIata=DUB&destinationIata=KRK&isReturn=true&discount=0",
+      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-09&dateIn=2026-10-11&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=KRK&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-09&tpEndDate=2026-10-11&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=KRK",
       "first_seen": "2026-06-22T07:00:09Z",
       "last_seen": "2026-06-24T07:00:00Z",
       "seen_count": 3
@@ -69,7 +69,7 @@
       "airline": "Ryanair",
       "stops": "Non-stop",
       "source": "ryanair",
-      "url": "https://www.ryanair.com/gb/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-02&dateIn=2026-10-04&originIata=BFS&destinationIata=KRK&isReturn=true&discount=0",
+      "url": "https://www.ryanair.com/gb/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-02&dateIn=2026-10-04&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=BFS&destinationIata=KRK&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-02&tpEndDate=2026-10-04&tpDiscount=0&tpPromoCode=&tpOriginIata=BFS&tpDestinationIata=KRK",
       "first_seen": "2026-06-23T07:00:04Z",
       "last_seen": "2026-06-24T07:00:00Z",
       "seen_count": 2
@@ -141,7 +141,7 @@
       "airline": "Ryanair",
       "stops": "Non-stop",
       "source": "ryanair",
-      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-16&dateIn=2026-10-18&originIata=DUB&destinationIata=BUD&isReturn=true&discount=0",
+      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-16&dateIn=2026-10-18&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BUD&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-16&tpEndDate=2026-10-18&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BUD",
       "first_seen": "2026-06-20T07:00:11Z",
       "last_seen": "2026-06-24T07:00:00Z",
       "seen_count": 5
@@ -189,7 +189,7 @@
       "airline": "Ryanair",
       "stops": "Non-stop",
       "source": "ryanair",
-      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-23&dateIn=2026-10-25&originIata=DUB&destinationIata=FAO&isReturn=true&discount=0",
+      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-23&dateIn=2026-10-25&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=FAO&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-23&tpEndDate=2026-10-25&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=FAO",
       "first_seen": "2026-06-19T07:00:14Z",
       "last_seen": "2026-06-24T07:00:00Z",
       "seen_count": 5
@@ -261,7 +261,7 @@
       "airline": "Ryanair",
       "stops": "Non-stop",
       "source": "ryanair",
-      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-30&dateIn=2026-11-01&originIata=DUB&destinationIata=VIE&isReturn=true&discount=0",
+      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-30&dateIn=2026-11-01&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=VIE&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-30&tpEndDate=2026-11-01&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=VIE",
       "first_seen": "2026-06-24T07:00:00Z",
       "last_seen": "2026-06-24T07:00:00Z",
       "seen_count": 1

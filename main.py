@@ -627,14 +627,23 @@ RYANAIR_BOOKING_MARKETS = {"DUB": "ie/en", "BFS": "gb/en", "BHD": "gb/en"}
 
 
 def ryanair_booking_url(origin, destination, depart, ret):
-    """Deep link to Ryanair's booking page pre-filled with this exact return
-    trip, so the alert/site 'View' opens the flight rather than the homepage."""
+    """Deep link to Ryanair's booking page pre-filled with this exact RETURN
+    trip. Ryanair's flight-select SPA needs the 'tp*' (trip) params in addition
+    to the plain ones, otherwise it opens a default/one-way search instead of
+    the round trip for these dates."""
     market = RYANAIR_BOOKING_MARKETS.get((origin or "").upper(), "ie/en")
+    date_out, date_in = depart.isoformat(), ret.isoformat()
     params = {
         "adults": "1", "teens": "0", "children": "0", "infants": "0",
-        "dateOut": depart.isoformat(), "dateIn": ret.isoformat(),
+        "dateOut": date_out, "dateIn": date_in,
+        "isConnectedFlight": "false", "isReturn": "true",
+        "discount": "0", "promoCode": "",
         "originIata": origin, "destinationIata": destination,
-        "isReturn": "true", "discount": "0",
+        # Trip params the new site actually reads to seed the return search.
+        "tpAdults": "1", "tpTeens": "0", "tpChildren": "0", "tpInfants": "0",
+        "tpStartDate": date_out, "tpEndDate": date_in,
+        "tpDiscount": "0", "tpPromoCode": "",
+        "tpOriginIata": origin, "tpDestinationIata": destination,
     }
     return f"https://www.ryanair.com/{market}/trip/flights/select?{urllib.parse.urlencode(params)}"
 
@@ -1830,6 +1839,11 @@ def collect_aviasales_deals(config, today=None):
 
 
 def run_aviasales_source(dry_run=False):
+    # Resilience: a missing optional token skips just this source rather than
+    # failing the whole run (which would block the Ryanair scan + page update).
+    if not os.getenv("TRAVELPAYOUTS_TOKEN"):
+        print("Skipping Aviasales: TRAVELPAYOUTS_TOKEN is not set.")
+        return
     config = get_aviasales_config()
     print(
         "Checking Aviasales fares: "
