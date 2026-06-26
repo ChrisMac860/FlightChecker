@@ -515,12 +515,12 @@ def overlaps_allowed_month(start_date, end_date, allowed_months):
 #   EXCLUDED_DESTINATIONS  - extra IATA codes (CSV) added to the defaults
 #   EXCLUDED_COUNTRIES     - country codes (CSV) that REPLACE the default {gb}
 DEFAULT_EXCLUDED_DESTINATION_CODES = {
-    "LHR", "LGW", "LTN", "STN", "LCY", "SEN",                  # London
+    "LON", "LHR", "LGW", "LTN", "STN", "LCY", "SEN",           # London (LON = metro code)
     "BHX", "BRS", "MAN", "LPL", "LBA", "NCL", "EMA", "BOH",    # England
     "EXT", "NQY", "DSA", "MME", "HUY", "SOU", "NWI", "BLK",
     "EDI", "GLA", "PIK", "ABZ", "INV", "DND",                  # Scotland
     "CWL", "IOM", "JER", "GCI",                                # Wales / islands
-    "CDG", "ORY", "BVA",                                       # Paris
+    "PAR", "CDG", "ORY", "BVA",                                # Paris (PAR = metro code)
 }
 DEFAULT_EXCLUDED_COUNTRY_CODES = {"gb"}                        # United Kingdom
 
@@ -1571,6 +1571,7 @@ def deal_to_log_entry(deal, now_iso):
         "origin_city": ORIGIN_CITIES.get(origin, origin),
         "destination": deal.get("destination") or destination_code,
         "destination_code": destination_code,
+        "destination_country": deal.get("destination_country") or "",
         "route": route,
         "depart_date": start.isoformat() if isinstance(start, dt.date) else "",
         "return_date": end.isoformat() if isinstance(end, dt.date) else "",
@@ -1634,8 +1635,10 @@ def upsert_deals_log(log, deals, now_iso):
 
 
 def prune_deals_log(log, today, now=None, max_age_hours=DEALS_LOG_MAX_AGE_HOURS):
-    """Drop trips whose return date is in the past, and (when `now` is given)
-    trips not re-seen within max_age_hours, so stale fares fall off the page."""
+    """Drop trips whose return date is in the past, trips not re-seen within
+    max_age_hours (when `now` is given), and any destination that is now excluded
+    — so changing the quality filter clears stale entries immediately rather than
+    waiting for them to age out."""
     today_iso = today.isoformat()
     cutoff_iso = None
     if now is not None and max_age_hours:
@@ -1650,6 +1653,8 @@ def prune_deals_log(log, today, now=None, max_age_hours=DEALS_LOG_MAX_AGE_HOURS)
             last_seen = entry.get("last_seen") or ""
             if last_seen and last_seen < cutoff_iso:
                 continue
+        if is_excluded_destination(entry.get("destination_code"), entry.get("destination_country")):
+            continue
         kept[deal_id] = entry
     return kept
 

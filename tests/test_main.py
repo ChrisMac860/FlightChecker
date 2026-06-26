@@ -701,6 +701,28 @@ class DestinationFilterTests(unittest.TestCase):
             detailed = main.add_filter_details(self._deal("DUB - BCN"), dt.date(2026, 6, 1), "", month_gated=False)
             self.assertFalse(detailed["eligible"])
 
+    def test_metro_city_codes_excluded(self):
+        # Aviasales returns metro codes (LON, PAR) rather than airport codes.
+        for code in ("LON", "PAR"):
+            detailed = main.add_filter_details(self._deal(f"DUB - {code}"), dt.date(2026, 6, 1), "", month_gated=False)
+            self.assertFalse(detailed["eligible"], f"{code} (metro) should be excluded")
+
+    def test_prune_drops_excluded_destinations(self):
+        seen = "2026-06-26T22:00:00Z"
+        log = {
+            "nice":  {"id": "nice", "destination_code": "BCN", "return_date": "2026-09-06", "last_seen": seen},
+            "uk":    {"id": "uk", "destination_code": "BHX", "return_date": "2026-09-06", "last_seen": seen},
+            "metro": {"id": "metro", "destination_code": "LON", "return_date": "2026-09-06", "last_seen": seen},
+            "ukc":   {"id": "ukc", "destination_code": "XYZ", "destination_country": "gb",
+                      "return_date": "2026-09-06", "last_seen": seen},
+        }
+        now = dt.datetime(2026, 6, 26, 22, 30, 0, tzinfo=dt.timezone.utc)
+        pruned = main.prune_deals_log(log, dt.date(2026, 6, 26), now=now)
+        self.assertIn("nice", pruned)
+        self.assertNotIn("uk", pruned)       # excluded by code list
+        self.assertNotIn("metro", pruned)    # excluded metro code
+        self.assertNotIn("ukc", pruned)      # excluded by stored country
+
 
 class ReviewRegressionTests(unittest.TestCase):
     """Regressions found by the adversarial review of the refactor."""
