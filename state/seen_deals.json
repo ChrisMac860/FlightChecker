@@ -24,6 +24,11 @@
     "first_seen": "2026-06-25",
     "last_alerted_price_eur": 35.08
   },
+  "BFS-MAN:2026-08-21:2026-08-23": {
+    "end_date": "2026-08-23",
+    "first_seen": "2026-06-26",
+    "last_alerted_price_eur": 36.48
+  },
   "BFS-MAN:2026-08-29:2026-08-31": {
     "end_date": "2026-08-31",
     "first_seen": "2026-06-25",
