@@ -4,6 +4,11 @@
     "first_seen": "2026-06-25",
     "last_alerted_price_eur": 76.38
   },
+  "BFS-EDI:2026-07-18:2026-07-20": {
+    "end_date": "2026-07-20",
+    "first_seen": "2026-06-26",
+    "last_alerted_price_eur": 35.08
+  },
   "BFS-EDI:2026-08-01:2026-08-04": {
     "end_date": "2026-08-04",
     "first_seen": "2026-06-25",
@@ -24,6 +29,11 @@
     "first_seen": "2026-06-25",
     "last_alerted_price_eur": 35.08
   },
+  "BFS-MAN:2026-08-01:2026-08-04": {
+    "end_date": "2026-08-04",
+    "first_seen": "2026-06-26",
+    "last_alerted_price_eur": 35.08
+  },
   "BFS-MAN:2026-08-21:2026-08-23": {
     "end_date": "2026-08-23",
     "first_seen": "2026-06-26",
@@ -33,6 +43,11 @@
     "end_date": "2026-08-31",
     "first_seen": "2026-06-25",
     "last_alerted_price_eur": 35.92
+  },
+  "BFS-STN:2026-08-01:2026-08-04": {
+    "end_date": "2026-08-04",
+    "first_seen": "2026-06-26",
+    "last_alerted_price_eur": 41.22
   },
   "BFS-STN:2026-09-04:2026-09-06": {
     "end_date": "2026-09-06",
@@ -87,6 +102,11 @@
   "DUB-BHX:2026-08-01:2026-08-04": {
     "end_date": "2026-08-04",
     "first_seen": "2026-06-25",
+    "last_alerted_price_eur": 31.98
+  },
+  "DUB-BRS:2026-08-01:2026-08-04": {
+    "end_date": "2026-08-04",
+    "first_seen": "2026-06-26",
     "last_alerted_price_eur": 31.98
   },
   "DUB-BRS:2026-08-29:2026-08-31": {
