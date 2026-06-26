@@ -507,7 +507,49 @@ def overlaps_allowed_month(start_date, end_date, allowed_months):
     return False
 
 
+# --- Destination quality filter ---------------------------------------------
+# Quality over quantity: skip too-close/commuter UK destinations and a handful
+# of specifically-excluded cities (e.g. Paris). UK is matched by country code so
+# every UK airport is caught; the code list covers non-country exclusions and
+# sources (Aviasales) that don't return a country. Extend via env:
+#   EXCLUDED_DESTINATIONS  - extra IATA codes (CSV) added to the defaults
+#   EXCLUDED_COUNTRIES     - country codes (CSV) that REPLACE the default {gb}
+DEFAULT_EXCLUDED_DESTINATION_CODES = {
+    "LHR", "LGW", "LTN", "STN", "LCY", "SEN",                  # London
+    "BHX", "BRS", "MAN", "LPL", "LBA", "NCL", "EMA", "BOH",    # England
+    "EXT", "NQY", "DSA", "MME", "HUY", "SOU", "NWI", "BLK",
+    "EDI", "GLA", "PIK", "ABZ", "INV", "DND",                  # Scotland
+    "CWL", "IOM", "JER", "GCI",                                # Wales / islands
+    "CDG", "ORY", "BVA",                                       # Paris
+}
+DEFAULT_EXCLUDED_COUNTRY_CODES = {"gb"}                        # United Kingdom
+
+
+def excluded_destination_codes():
+    extra = parse_csv(get_env("EXCLUDED_DESTINATIONS", required=False, default=""), uppercase=True)
+    return DEFAULT_EXCLUDED_DESTINATION_CODES | set(extra)
+
+
+def excluded_country_codes():
+    override = parse_csv(get_env("EXCLUDED_COUNTRIES", required=False, default=""), lowercase=True)
+    return set(override) if override else DEFAULT_EXCLUDED_COUNTRY_CODES
+
+
+def is_excluded_destination(destination_code, country_code=None):
+    """True for destinations we deliberately don't surface (UK + naff cities)."""
+    if (destination_code or "").upper() in excluded_destination_codes():
+        return True
+    if country_code and country_code.lower() in excluded_country_codes():
+        return True
+    return False
+
+
 def add_filter_details(deal, context_date, context_text, month_gated=True):
+    dest_code = resolve_route_codes(deal.get("route"))[1]
+    if is_excluded_destination(dest_code, deal.get("destination_country")):
+        deal["eligible"] = False
+        deal["filter_reason"] = "excluded destination (quality filter)"
+        return deal
     if isinstance(deal.get("start_date"), dt.date) and isinstance(deal.get("end_date"), dt.date):
         dates = (deal["start_date"], deal["end_date"])
     else:
@@ -659,6 +701,7 @@ def normalize_ryanair_fare(fare):
     origin_code = get_airport_code(outbound.get("departureAirport"))
     destination_code = get_airport_code(outbound.get("arrivalAirport"))
     destination_city = get_airport_city(outbound.get("arrivalAirport"))
+    destination_country = ((outbound.get("arrivalAirport") or {}).get("city") or {}).get("countryCode") or ""
     outbound_departure = parse_ryanair_datetime(outbound.get("departureDate"))
     inbound_departure = parse_ryanair_datetime(inbound.get("departureDate"))
     price_value = float(summary_price["value"])
@@ -684,6 +727,7 @@ def normalize_ryanair_fare(fare):
         "price_eur": to_eur(price_value, currency),
         "currency": currency,
         "destination": destination_city or None,
+        "destination_country": destination_country,
         "airline": "Ryanair",
         "stops": "Non-stop",
         "route": f"{origin_code} - {destination_code}",

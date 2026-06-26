@@ -39,6 +39,7 @@ API failures on any source are logged as warnings so they never affect the other
 - Default max return price: EUR 100 (prices in other currencies, e.g. GBP from Belfast, are normalised to EUR with approximate static rates for comparison, while the alert shows the native currency)
 - Digest shows the single cheapest trip **per destination**, sorted by price, so you see many cities to visit rather than several fares to the same place
 - `RYANAIR_DESTINATIONS=curated` keeps the original five seasonal cities (Budapest, Copenhagen, Krakow, Milan, Riga) with month windows; `RYANAIR_DESTINATIONS=all` scans every direct route across the next `RYANAIR_SCAN_MONTHS` months
+- **Quality filter:** UK destinations (matched by country) and a few specifically-excluded cities (Paris) are dropped across all sources — quality over quantity. Extend with `EXCLUDED_DESTINATIONS` (extra IATA codes, CSV) and override the excluded countries with `EXCLUDED_COUNTRIES` (country codes, CSV; default `GB`)
 
 ## Setup
 
@@ -69,6 +70,8 @@ Optional repository variables (with their defaults):
 - `STATE_FILE` — `state/seen_deals.json` (set empty to disable dedupe/state)
 - `DEALS_LOG_FILE` — `docs/deals.json` (the public log powering the web page; set empty to disable)
 - `GMAIL_PROCESSED_LABEL` — `FlightChecker/Processed` (Gmail label applied to handled messages)
+- `EXCLUDED_DESTINATIONS` — unset (extra destination IATA codes to drop, CSV; added to the built-in UK + Paris list)
+- `EXCLUDED_COUNTRIES` — `GB` (country codes whose destinations are dropped, CSV)
 
 For Gmail, confirm the account has 2-Step Verification enabled, IMAP enabled, and the `Flight alerts` label set to "Show in IMAP".
 

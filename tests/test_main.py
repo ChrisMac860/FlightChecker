@@ -671,6 +671,37 @@ class TelegramChunkTests(unittest.TestCase):
         self.assertEqual("".join(chunks), text)
 
 
+class DestinationFilterTests(unittest.TestCase):
+    def _deal(self, route, country=""):
+        return {
+            "route": route, "destination_country": country,
+            "start_date": dt.date(2026, 9, 4), "end_date": dt.date(2026, 9, 6),
+            "price_value": 40.0, "currency": "EUR",
+        }
+
+    def test_uk_and_paris_excluded(self):
+        cases = [("DUB - BHX", "gb"), ("DUB - BRS", "gb"), ("DUB - STN", "gb"),
+                 ("DUB - EDI", "gb"), ("DUB - CDG", "fr"), ("DUB - BVA", "fr")]
+        for route, country in cases:
+            detailed = main.add_filter_details(self._deal(route, country), dt.date(2026, 6, 1), "", month_gated=False)
+            self.assertFalse(detailed["eligible"], f"{route} should be excluded")
+
+    def test_nice_places_kept(self):
+        for route in ("DUB - BCN", "DUB - BUD", "DUB - RIX", "DUB - NAP", "DUB - LIS"):
+            detailed = main.add_filter_details(self._deal(route), dt.date(2026, 6, 1), "", month_gated=False)
+            self.assertTrue(detailed["eligible"], f"{route} should be kept")
+
+    def test_any_uk_airport_excluded_by_country(self):
+        # A UK airport not in the default code list is still dropped via country.
+        detailed = main.add_filter_details(self._deal("DUB - XYZ", "gb"), dt.date(2026, 6, 1), "", month_gated=False)
+        self.assertFalse(detailed["eligible"])
+
+    def test_env_can_extend_exclusions(self):
+        with patch.dict(os.environ, {"EXCLUDED_DESTINATIONS": "BCN"}):
+            detailed = main.add_filter_details(self._deal("DUB - BCN"), dt.date(2026, 6, 1), "", month_gated=False)
+            self.assertFalse(detailed["eligible"])
+
+
 class ReviewRegressionTests(unittest.TestCase):
     """Regressions found by the adversarial review of the refactor."""
 
