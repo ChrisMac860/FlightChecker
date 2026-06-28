@@ -107,7 +107,7 @@
   "DUB-BER:2026-09-11:2026-09-13": {
     "end_date": "2026-09-13",
     "first_seen": "2026-06-25",
-    "last_alerted_price_eur": 53.98
+    "last_alerted_price_eur": 48.98
   },
   "DUB-BER:2026-09-18:2026-09-20": {
     "end_date": "2026-09-20",
@@ -122,7 +122,7 @@
   "DUB-BGY:2026-10-16:2026-10-18": {
     "end_date": "2026-10-18",
     "first_seen": "2026-06-26",
-    "last_alerted_price_eur": 62.98
+    "last_alerted_price_eur": 56.98
   },
   "DUB-BHX:2026-08-01:2026-08-04": {
     "end_date": "2026-08-04",
