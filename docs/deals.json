@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-06-29T02:56:34Z",
-  "deal_count": 53,
+  "generated_at": "2026-06-29T08:54:32Z",
+  "deal_count": 56,
   "deals": [
     {
       "id": "DUB-BER:2026-09-18:2026-09-20",
@@ -24,8 +24,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-09-18&dateIn=2026-09-20&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BER&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-09-18&tpEndDate=2026-09-20&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BER",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-BER:2026-09-11:2026-09-13",
@@ -49,8 +49,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-09-11&dateIn=2026-09-13&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BER&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-09-11&tpEndDate=2026-09-13&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BER",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-BGY:2026-10-03:2026-10-05",
@@ -99,8 +99,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-09-11&dateIn=2026-09-13&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=CGN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-09-11&tpEndDate=2026-09-13&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=CGN",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-BRU:2026-08-28:2026-08-30",
@@ -124,8 +124,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-08-28&dateIn=2026-08-30&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BRU&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-08-28&tpEndDate=2026-08-30&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BRU",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-BRU:2026-10-03:2026-10-05",
@@ -149,8 +149,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-03&dateIn=2026-10-05&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BRU&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-03&tpEndDate=2026-10-05&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BRU",
       "first_seen": "2026-06-28T20:56:22Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 2
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 3
     },
     {
       "id": "DUB-BGY:2026-10-16:2026-10-18",
@@ -174,8 +174,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-16&dateIn=2026-10-18&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BGY&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-16&tpEndDate=2026-10-18&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BGY",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-AMS:2026-08-21:2026-08-23",
@@ -199,8 +199,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-08-21&dateIn=2026-08-23&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=AMS&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-08-21&tpEndDate=2026-08-23&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=AMS",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-BER:2026-08-28:2026-08-30",
@@ -224,8 +224,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-08-28&dateIn=2026-08-30&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BER&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-08-28&tpEndDate=2026-08-30&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BER",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-AMS:2026-08-29:2026-08-31",
@@ -249,8 +249,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-08-29&dateIn=2026-08-31&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=AMS&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-08-29&tpEndDate=2026-08-31&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=AMS",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-BRU:2026-08-21:2026-08-23",
@@ -274,33 +274,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-08-21&dateIn=2026-08-23&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BRU&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-08-21&tpEndDate=2026-08-23&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BRU",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
-    },
-    {
-      "id": "DUB-AMS:2026-08-15:2026-08-17",
-      "origin": "DUB",
-      "origin_city": "Dublin",
-      "destination": "Amsterdam",
-      "destination_code": "AMS",
-      "destination_country": "nl",
-      "route": "DUB → AMS",
-      "depart_date": "2026-08-15",
-      "return_date": "2026-08-17",
-      "dates_label": "Sat 15 Aug - Mon 17 Aug",
-      "nights": 2,
-      "days_off": 1,
-      "price": "EUR 63.98",
-      "price_value": 63.98,
-      "price_eur": 63.98,
-      "currency": "EUR",
-      "airline": "Ryanair",
-      "stops": "Non-stop",
-      "source": "ryanair",
-      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-08-15&dateIn=2026-08-17&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=AMS&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-08-15&tpEndDate=2026-08-17&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=AMS",
-      "first_seen": "2026-06-28T13:26:01Z",
-      "last_seen": "2026-06-28T20:56:22Z",
-      "seen_count": 3
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-BTS:2026-11-21:2026-11-23",
@@ -324,8 +299,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-11-21&dateIn=2026-11-23&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BTS&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-11-21&tpEndDate=2026-11-23&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BTS",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-BCN:2026-08-21:2026-08-23",
@@ -349,8 +324,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-08-21&dateIn=2026-08-23&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BCN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-08-21&tpEndDate=2026-08-23&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BCN",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-BTS:2026-11-07:2026-11-09",
@@ -374,8 +349,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-11-07&dateIn=2026-11-09&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BTS&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-11-07&tpEndDate=2026-11-09&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BTS",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-CGN:2026-09-04:2026-09-06",
@@ -399,8 +374,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-09-04&dateIn=2026-09-06&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=CGN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-09-04&tpEndDate=2026-09-06&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=CGN",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-BRU:2026-09-18:2026-09-20",
@@ -424,8 +399,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-09-18&dateIn=2026-09-20&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BRU&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-09-18&tpEndDate=2026-09-20&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BRU",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-BCN:2026-09-18:2026-09-20",
@@ -449,8 +424,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-09-18&dateIn=2026-09-20&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BCN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-09-18&tpEndDate=2026-09-20&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BCN",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-BGY:2026-10-09:2026-10-11",
@@ -474,8 +449,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-09&dateIn=2026-10-11&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BGY&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-09&tpEndDate=2026-10-11&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BGY",
       "first_seen": "2026-06-28T07:46:39Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 6
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 7
     },
     {
       "id": "DUB-BRU:2026-10-16:2026-10-18",
@@ -499,8 +474,33 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-16&dateIn=2026-10-18&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BRU&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-16&tpEndDate=2026-10-18&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BRU",
       "first_seen": "2026-06-28T07:46:39Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 6
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 7
+    },
+    {
+      "id": "DUB-BTS:2026-11-20:2026-11-22",
+      "origin": "DUB",
+      "origin_city": "Dublin",
+      "destination": "Bratislava",
+      "destination_code": "BTS",
+      "destination_country": "sk",
+      "route": "DUB → BTS",
+      "depart_date": "2026-11-20",
+      "return_date": "2026-11-22",
+      "dates_label": "Fri 20 Nov - Sun 22 Nov",
+      "nights": 2,
+      "days_off": 1,
+      "price": "EUR 75.08",
+      "price_value": 75.08,
+      "price_eur": 75.08,
+      "currency": "EUR",
+      "airline": "Ryanair",
+      "stops": "Non-stop",
+      "source": "ryanair",
+      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-11-20&dateIn=2026-11-22&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BTS&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-11-20&tpEndDate=2026-11-22&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BTS",
+      "first_seen": "2026-06-29T08:54:29Z",
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 1
     },
     {
       "id": "DUB-BER:2026-08-21:2026-08-23",
@@ -524,8 +524,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-08-21&dateIn=2026-08-23&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BER&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-08-21&tpEndDate=2026-08-23&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BER",
       "first_seen": "2026-06-28T02:55:51Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 7
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 8
     },
     {
       "id": "DUB-BGY:2026-08-29:2026-08-31",
@@ -549,8 +549,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-08-29&dateIn=2026-08-31&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BGY&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-08-29&tpEndDate=2026-08-31&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BGY",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-BTS:2026-10-09:2026-10-11",
@@ -574,8 +574,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-09&dateIn=2026-10-11&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BTS&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-09&tpEndDate=2026-10-11&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BTS",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-CGN:2026-08-21:2026-08-23",
@@ -624,8 +624,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-09-19&dateIn=2026-09-21&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BER&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-09-19&tpEndDate=2026-09-21&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BER",
       "first_seen": "2026-06-28T13:26:01Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 4
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 5
     },
     {
       "id": "DUB-BCN:2026-09-26:2026-09-28",
@@ -649,8 +649,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-09-26&dateIn=2026-09-28&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BCN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-09-26&tpEndDate=2026-09-28&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BCN",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-BTS:2026-11-28:2026-11-30",
@@ -674,8 +674,33 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-11-28&dateIn=2026-11-30&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BTS&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-11-28&tpEndDate=2026-11-30&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BTS",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
+    },
+    {
+      "id": "DUB-BCN:2026-08-28:2026-08-30",
+      "origin": "DUB",
+      "origin_city": "Dublin",
+      "destination": "Barcelona",
+      "destination_code": "BCN",
+      "destination_country": "es",
+      "route": "DUB → BCN",
+      "depart_date": "2026-08-28",
+      "return_date": "2026-08-30",
+      "dates_label": "Fri 28 Aug - Sun 30 Aug",
+      "nights": 2,
+      "days_off": 1,
+      "price": "EUR 83.98",
+      "price_value": 83.98,
+      "price_eur": 83.98,
+      "currency": "EUR",
+      "airline": "Ryanair",
+      "stops": "Non-stop",
+      "source": "ryanair",
+      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-08-28&dateIn=2026-08-30&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BCN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-08-28&tpEndDate=2026-08-30&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BCN",
+      "first_seen": "2026-06-28T20:56:22Z",
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 3
     },
     {
       "id": "DUB-BCN:2026-08-29:2026-08-31",
@@ -699,20 +724,20 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-08-29&dateIn=2026-08-31&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BCN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-08-29&tpEndDate=2026-08-31&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BCN",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
-      "id": "DUB-BCN:2026-08-28:2026-08-30",
+      "id": "DUB-BCN:2026-09-19:2026-09-21",
       "origin": "DUB",
       "origin_city": "Dublin",
       "destination": "Barcelona",
       "destination_code": "BCN",
       "destination_country": "es",
       "route": "DUB → BCN",
-      "depart_date": "2026-08-28",
-      "return_date": "2026-08-30",
-      "dates_label": "Fri 28 Aug - Sun 30 Aug",
+      "depart_date": "2026-09-19",
+      "return_date": "2026-09-21",
+      "dates_label": "Sat 19 Sep - Mon 21 Sep",
       "nights": 2,
       "days_off": 1,
       "price": "EUR 84.98",
@@ -722,10 +747,10 @@
       "airline": "Ryanair",
       "stops": "Non-stop",
       "source": "ryanair",
-      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-08-28&dateIn=2026-08-30&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BCN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-08-28&tpEndDate=2026-08-30&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BCN",
-      "first_seen": "2026-06-28T20:56:22Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 2
+      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-09-19&dateIn=2026-09-21&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BCN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-09-19&tpEndDate=2026-09-21&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BCN",
+      "first_seen": "2026-06-25T00:16:26Z",
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-AMS:2026-10-16:2026-10-18",
@@ -749,8 +774,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-16&dateIn=2026-10-18&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=AMS&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-16&tpEndDate=2026-10-18&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=AMS",
       "first_seen": "2026-06-26T14:13:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 18
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 19
     },
     {
       "id": "DUB-ARN:2026-11-14:2026-11-16",
@@ -774,8 +799,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-11-14&dateIn=2026-11-16&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=ARN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-11-14&tpEndDate=2026-11-16&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=ARN",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-CGN:2026-11-21:2026-11-23",
@@ -799,8 +824,33 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-11-21&dateIn=2026-11-23&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=CGN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-11-21&tpEndDate=2026-11-23&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=CGN",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
+    },
+    {
+      "id": "DUB-BTS:2026-11-14:2026-11-16",
+      "origin": "DUB",
+      "origin_city": "Dublin",
+      "destination": "Bratislava",
+      "destination_code": "BTS",
+      "destination_country": "sk",
+      "route": "DUB → BTS",
+      "depart_date": "2026-11-14",
+      "return_date": "2026-11-16",
+      "dates_label": "Sat 14 Nov - Mon 16 Nov",
+      "nights": 2,
+      "days_off": 1,
+      "price": "EUR 86.18",
+      "price_value": 86.18,
+      "price_eur": 86.18,
+      "currency": "EUR",
+      "airline": "Ryanair",
+      "stops": "Non-stop",
+      "source": "ryanair",
+      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-11-14&dateIn=2026-11-16&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BTS&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-11-14&tpEndDate=2026-11-16&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BTS",
+      "first_seen": "2026-06-25T00:16:26Z",
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-CGN:2026-10-09:2026-10-11",
@@ -824,8 +874,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-09&dateIn=2026-10-11&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=CGN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-09&tpEndDate=2026-10-11&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=CGN",
       "first_seen": "2026-06-25T14:15:12Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 24
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 25
     },
     {
       "id": "DUB-CGN:2026-09-18:2026-09-20",
@@ -849,33 +899,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-09-18&dateIn=2026-09-20&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=CGN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-09-18&tpEndDate=2026-09-20&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=CGN",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
-    },
-    {
-      "id": "DUB-BCN:2026-09-19:2026-09-21",
-      "origin": "DUB",
-      "origin_city": "Dublin",
-      "destination": "Barcelona",
-      "destination_code": "BCN",
-      "destination_country": "es",
-      "route": "DUB → BCN",
-      "depart_date": "2026-09-19",
-      "return_date": "2026-09-21",
-      "dates_label": "Sat 19 Sep - Mon 21 Sep",
-      "nights": 2,
-      "days_off": 1,
-      "price": "EUR 86.98",
-      "price_value": 86.98,
-      "price_eur": 86.98,
-      "currency": "EUR",
-      "airline": "Ryanair",
-      "stops": "Non-stop",
-      "source": "ryanair",
-      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-09-19&dateIn=2026-09-21&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BCN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-09-19&tpEndDate=2026-09-21&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BCN",
-      "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-BTS:2026-10-30:2026-11-01",
@@ -899,8 +924,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-30&dateIn=2026-11-01&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BTS&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-30&tpEndDate=2026-11-01&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BTS",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-BCN:2026-10-10:2026-10-12",
@@ -924,8 +949,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-10&dateIn=2026-10-12&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BCN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-10&tpEndDate=2026-10-12&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BCN",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-BCN:2026-10-17:2026-10-19",
@@ -949,8 +974,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-17&dateIn=2026-10-19&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BCN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-17&tpEndDate=2026-10-19&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BCN",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-ALC:2026-09-05:2026-09-07",
@@ -974,8 +999,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-09-05&dateIn=2026-09-07&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=ALC&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-09-05&tpEndDate=2026-09-07&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=ALC",
       "first_seen": "2026-06-25T07:38:22Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 26
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 27
     },
     {
       "id": "DUB-BRU:2026-11-06:2026-11-08",
@@ -999,8 +1024,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-11-06&dateIn=2026-11-08&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BRU&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-11-06&tpEndDate=2026-11-08&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BRU",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-MIL:2026-09-25:2026-09-27",
@@ -1024,8 +1049,8 @@
       "source": "aviasales",
       "url": "https://www.aviasales.com/search/DUB2509MIL27091?t=FR17903556001790368500000155DUBMXP17905044001790510100000155BGYDUB_0b4223486785430a511cd408ac222e72_7949&search_date=25062026&expected_price_uuid=019eff23-7fa2-8030-ad54-e4aae87cdd83&static_fare_key=TY%7CP0%7CH0%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=OEg4BT7H7XP3lP7lAjKPoQ&expected_price_source=share&expected_price_currency=eur&expected_price=92",
       "first_seen": "2026-06-26T21:15:06Z",
-      "last_seen": "2026-06-29T02:56:34Z",
-      "seen_count": 16
+      "last_seen": "2026-06-29T08:54:32Z",
+      "seen_count": 17
     },
     {
       "id": "DUB-BRU:2026-11-13:2026-11-15",
@@ -1049,8 +1074,8 @@
       "source": "aviasales",
       "url": "https://www.aviasales.com/search/DUB1311BRU15111?t=FR17945766001794586200000100DUBCRL17947386001794741000000100BRUDUB_ab131ce8c0be2dcd2e8ba4564e489595_7865&search_date=25062026&expected_price_uuid=019efc29-7ad2-8030-6a1c-53550e9b7661&static_fare_key=TY%7CP0%7CH0%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=hVO77Rou6X5glCrBiIV-aA&expected_price_source=share&expected_price_currency=eur&expected_price=92",
       "first_seen": "2026-06-25T00:16:29Z",
-      "last_seen": "2026-06-29T02:56:34Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:32Z",
+      "seen_count": 28
     },
     {
       "id": "BFS-ALC:2026-11-20:2026-11-22",
@@ -1074,8 +1099,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/gb/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-11-20&dateIn=2026-11-22&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=BFS&destinationIata=ALC&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-11-20&tpEndDate=2026-11-22&tpDiscount=0&tpPromoCode=&tpOriginIata=BFS&tpDestinationIata=ALC",
       "first_seen": "2026-06-26T14:13:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 18
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 19
     },
     {
       "id": "DUB-ALC:2026-10-17:2026-10-19",
@@ -1099,8 +1124,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-17&dateIn=2026-10-19&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=ALC&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-17&tpEndDate=2026-10-19&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=ALC",
       "first_seen": "2026-06-28T07:46:39Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 6
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 7
     },
     {
       "id": "DUB-ARN:2026-11-07:2026-11-09",
@@ -1124,8 +1149,33 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-11-07&dateIn=2026-11-09&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=ARN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-11-07&tpEndDate=2026-11-09&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=ARN",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
+    },
+    {
+      "id": "DUB-CGN:2026-11-07:2026-11-09",
+      "origin": "DUB",
+      "origin_city": "Dublin",
+      "destination": "Cologne",
+      "destination_code": "CGN",
+      "destination_country": "de",
+      "route": "DUB → CGN",
+      "depart_date": "2026-11-07",
+      "return_date": "2026-11-09",
+      "dates_label": "Sat 7 Nov - Mon 9 Nov",
+      "nights": 2,
+      "days_off": 1,
+      "price": "EUR 92.98",
+      "price_value": 92.98,
+      "price_eur": 92.98,
+      "currency": "EUR",
+      "airline": "Ryanair",
+      "stops": "Non-stop",
+      "source": "ryanair",
+      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-11-07&dateIn=2026-11-09&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=CGN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-11-07&tpEndDate=2026-11-09&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=CGN",
+      "first_seen": "2026-06-25T00:16:26Z",
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-CGN:2026-11-14:2026-11-16",
@@ -1149,33 +1199,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-11-14&dateIn=2026-11-16&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=CGN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-11-14&tpEndDate=2026-11-16&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=CGN",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
-    },
-    {
-      "id": "DUB-BTS:2026-11-14:2026-11-16",
-      "origin": "DUB",
-      "origin_city": "Dublin",
-      "destination": "Bratislava",
-      "destination_code": "BTS",
-      "destination_country": "sk",
-      "route": "DUB → BTS",
-      "depart_date": "2026-11-14",
-      "return_date": "2026-11-16",
-      "dates_label": "Sat 14 Nov - Mon 16 Nov",
-      "nights": 2,
-      "days_off": 1,
-      "price": "EUR 93.74",
-      "price_value": 93.74,
-      "price_eur": 93.74,
-      "currency": "EUR",
-      "airline": "Ryanair",
-      "stops": "Non-stop",
-      "source": "ryanair",
-      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-11-14&dateIn=2026-11-16&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BTS&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-11-14&tpEndDate=2026-11-16&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BTS",
-      "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
       "id": "DUB-BER:2026-10-02:2026-10-04",
@@ -1199,8 +1224,8 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-02&dateIn=2026-10-04&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BER&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-02&tpEndDate=2026-10-04&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BER",
       "first_seen": "2026-06-26T14:13:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 18
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 19
     },
     {
       "id": "DUB-CGN:2026-10-31:2026-11-02",
@@ -1224,8 +1249,58 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-31&dateIn=2026-11-02&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=CGN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-31&tpEndDate=2026-11-02&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=CGN",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
+    },
+    {
+      "id": "BFS-ALC:2026-09-18:2026-09-20",
+      "origin": "BFS",
+      "origin_city": "Belfast",
+      "destination": "Alicante",
+      "destination_code": "ALC",
+      "destination_country": "es",
+      "route": "BFS → ALC",
+      "depart_date": "2026-09-18",
+      "return_date": "2026-09-20",
+      "dates_label": "Fri 18 Sep - Sun 20 Sep",
+      "nights": 2,
+      "days_off": 1,
+      "price": "GBP 81.98",
+      "price_value": 81.98,
+      "price_eur": 95.92,
+      "currency": "GBP",
+      "airline": "Ryanair",
+      "stops": "Non-stop",
+      "source": "ryanair",
+      "url": "https://www.ryanair.com/gb/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-09-18&dateIn=2026-09-20&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=BFS&destinationIata=ALC&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-09-18&tpEndDate=2026-09-20&tpDiscount=0&tpPromoCode=&tpOriginIata=BFS&tpDestinationIata=ALC",
+      "first_seen": "2026-06-28T10:23:46Z",
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 6
+    },
+    {
+      "id": "BFS-ALC:2026-11-21:2026-11-23",
+      "origin": "BFS",
+      "origin_city": "Belfast",
+      "destination": "Alicante",
+      "destination_code": "ALC",
+      "destination_country": "es",
+      "route": "BFS → ALC",
+      "depart_date": "2026-11-21",
+      "return_date": "2026-11-23",
+      "dates_label": "Sat 21 Nov - Mon 23 Nov",
+      "nights": 2,
+      "days_off": 1,
+      "price": "GBP 82.63",
+      "price_value": 82.63,
+      "price_eur": 96.68,
+      "currency": "GBP",
+      "airline": "Ryanair",
+      "stops": "Non-stop",
+      "source": "ryanair",
+      "url": "https://www.ryanair.com/gb/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-11-21&dateIn=2026-11-23&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=BFS&destinationIata=ALC&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-11-21&tpEndDate=2026-11-23&tpDiscount=0&tpPromoCode=&tpOriginIata=BFS&tpDestinationIata=ALC",
+      "first_seen": "2026-06-29T08:54:29Z",
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 1
     },
     {
       "id": "DUB-BTS:2026-10-16:2026-10-18",
@@ -1249,58 +1324,33 @@
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-16&dateIn=2026-10-18&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BTS&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-16&tpEndDate=2026-10-18&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BTS",
       "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 28
     },
     {
-      "id": "DUB-CGN:2026-11-07:2026-11-09",
+      "id": "DUB-BTS:2026-10-25:2026-10-27",
       "origin": "DUB",
       "origin_city": "Dublin",
-      "destination": "Cologne",
-      "destination_code": "CGN",
-      "destination_country": "de",
-      "route": "DUB → CGN",
-      "depart_date": "2026-11-07",
-      "return_date": "2026-11-09",
-      "dates_label": "Sat 7 Nov - Mon 9 Nov",
+      "destination": "Bratislava",
+      "destination_code": "BTS",
+      "destination_country": "sk",
+      "route": "DUB → BTS",
+      "depart_date": "2026-10-25",
+      "return_date": "2026-10-27",
+      "dates_label": "Sun 25 Oct - Tue 27 Oct",
       "nights": 2,
       "days_off": 1,
-      "price": "EUR 97.64",
-      "price_value": 97.64,
-      "price_eur": 97.64,
+      "price": "EUR 97.98",
+      "price_value": 97.98,
+      "price_eur": 97.98,
       "currency": "EUR",
       "airline": "Ryanair",
       "stops": "Non-stop",
       "source": "ryanair",
-      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-11-07&dateIn=2026-11-09&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=CGN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-11-07&tpEndDate=2026-11-09&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=CGN",
-      "first_seen": "2026-06-25T00:16:26Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 27
-    },
-    {
-      "id": "BFS-ALC:2026-09-18:2026-09-20",
-      "origin": "BFS",
-      "origin_city": "Belfast",
-      "destination": "Alicante",
-      "destination_code": "ALC",
-      "destination_country": "es",
-      "route": "BFS → ALC",
-      "depart_date": "2026-09-18",
-      "return_date": "2026-09-20",
-      "dates_label": "Fri 18 Sep - Sun 20 Sep",
-      "nights": 2,
-      "days_off": 1,
-      "price": "GBP 84.98",
-      "price_value": 84.98,
-      "price_eur": 99.43,
-      "currency": "GBP",
-      "airline": "Ryanair",
-      "stops": "Non-stop",
-      "source": "ryanair",
-      "url": "https://www.ryanair.com/gb/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-09-18&dateIn=2026-09-20&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=BFS&destinationIata=ALC&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-09-18&tpEndDate=2026-09-20&tpDiscount=0&tpPromoCode=&tpOriginIata=BFS&tpDestinationIata=ALC",
-      "first_seen": "2026-06-28T10:23:46Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 5
+      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-10-25&dateIn=2026-10-27&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BTS&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-10-25&tpEndDate=2026-10-27&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BTS",
+      "first_seen": "2026-06-29T08:54:29Z",
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 1
     },
     {
       "id": "DUB-BGY:2026-09-25:2026-09-27",
@@ -1315,17 +1365,42 @@
       "dates_label": "Fri 25 Sep - Sun 27 Sep",
       "nights": 2,
       "days_off": 1,
-      "price": "EUR 99.58",
-      "price_value": 99.58,
-      "price_eur": 99.58,
+      "price": "EUR 98.63",
+      "price_value": 98.63,
+      "price_eur": 98.63,
       "currency": "EUR",
       "airline": "Ryanair",
       "stops": "Non-stop",
       "source": "ryanair",
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-09-25&dateIn=2026-09-27&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BGY&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-09-25&tpEndDate=2026-09-27&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BGY",
       "first_seen": "2026-06-28T02:55:51Z",
-      "last_seen": "2026-06-29T02:56:32Z",
-      "seen_count": 7
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 8
+    },
+    {
+      "id": "DUB-BCN:2026-08-14:2026-08-16",
+      "origin": "DUB",
+      "origin_city": "Dublin",
+      "destination": "Barcelona",
+      "destination_code": "BCN",
+      "destination_country": "es",
+      "route": "DUB → BCN",
+      "depart_date": "2026-08-14",
+      "return_date": "2026-08-16",
+      "dates_label": "Fri 14 Aug - Sun 16 Aug",
+      "nights": 2,
+      "days_off": 1,
+      "price": "EUR 99.42",
+      "price_value": 99.42,
+      "price_eur": 99.42,
+      "currency": "EUR",
+      "airline": "Ryanair",
+      "stops": "Non-stop",
+      "source": "ryanair",
+      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-08-14&dateIn=2026-08-16&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BCN&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-08-14&tpEndDate=2026-08-16&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BCN",
+      "first_seen": "2026-06-29T08:54:29Z",
+      "last_seen": "2026-06-29T08:54:29Z",
+      "seen_count": 1
     }
   ]
 }
