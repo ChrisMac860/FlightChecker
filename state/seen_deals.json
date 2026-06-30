@@ -1,4 +1,9 @@
 {
+  "BFS-ALC:2026-09-18:2026-09-20": {
+    "end_date": "2026-09-20",
+    "first_seen": "2026-06-30",
+    "last_alerted_price_eur": 88.9
+  },
   "BFS-ALC:2026-11-20:2026-11-22": {
     "end_date": "2026-11-22",
     "first_seen": "2026-06-27",
@@ -208,11 +213,6 @@
     "end_date": "2026-07-12",
     "first_seen": "2026-06-26",
     "last_alerted_price_eur": 52.0
-  },
-  "DUB-KIR:2026-06-27:2026-06-29": {
-    "end_date": "2026-06-29",
-    "first_seen": "2026-06-25",
-    "last_alerted_price_eur": 39.98
   },
   "DUB-LON:2026-07-10:2026-07-12": {
     "end_date": "2026-07-12",
