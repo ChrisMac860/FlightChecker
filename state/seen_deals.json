@@ -243,5 +243,10 @@
     "end_date": "2026-09-27",
     "first_seen": "2026-06-25",
     "last_alerted_price_eur": 63.0
+  },
+  "DUB-REU:2026-08-28:2026-08-30": {
+    "end_date": "2026-08-30",
+    "first_seen": "2026-06-30",
+    "last_alerted_price_eur": 85.0
   }
 }
