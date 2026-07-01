@@ -2,7 +2,7 @@
   "BFS-ALC:2026-09-18:2026-09-20": {
     "end_date": "2026-09-20",
     "first_seen": "2026-06-30",
-    "last_alerted_price_eur": 88.9
+    "last_alerted_price_eur": 81.88
   },
   "BFS-ALC:2026-11-20:2026-11-22": {
     "end_date": "2026-11-22",
@@ -119,6 +119,11 @@
     "first_seen": "2026-06-25",
     "last_alerted_price_eur": 66.98
   },
+  "DUB-BCN:2026-08-29:2026-08-31": {
+    "end_date": "2026-08-31",
+    "first_seen": "2026-07-01",
+    "last_alerted_price_eur": 73.98
+  },
   "DUB-BCN:2026-09-18:2026-09-20": {
     "end_date": "2026-09-20",
     "first_seen": "2026-06-25",
@@ -147,7 +152,7 @@
   "DUB-BGY:2026-10-16:2026-10-18": {
     "end_date": "2026-10-18",
     "first_seen": "2026-06-26",
-    "last_alerted_price_eur": 56.98
+    "last_alerted_price_eur": 49.98
   },
   "DUB-BHX:2026-08-01:2026-08-04": {
     "end_date": "2026-08-04",
