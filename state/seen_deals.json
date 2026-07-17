@@ -324,6 +324,11 @@
     "first_seen": "2026-06-25",
     "last_alerted_price_eur": 82.0
   },
+  "DUB-KIR:2026-07-31:2026-08-02": {
+    "end_date": "2026-08-02",
+    "first_seen": "2026-07-17",
+    "last_alerted_price_eur": 45.98
+  },
   "DUB-LON:2026-07-25:2026-07-27": {
     "end_date": "2026-07-27",
     "first_seen": "2026-06-26",
