@@ -34,11 +34,6 @@
     "first_seen": "2026-07-12",
     "last_alerted_price_eur": 79.13
   },
-  "BFS-EDI:2026-07-18:2026-07-20": {
-    "end_date": "2026-07-20",
-    "first_seen": "2026-06-26",
-    "last_alerted_price_eur": 35.08
-  },
   "BFS-EDI:2026-08-01:2026-08-03": {
     "end_date": "2026-08-03",
     "first_seen": "2026-06-26",
@@ -342,7 +337,7 @@
   "DUB-CGN:2026-10-09:2026-10-11": {
     "end_date": "2026-10-11",
     "first_seen": "2026-07-13",
-    "last_alerted_price_eur": 77.58
+    "last_alerted_price_eur": 71.98
   },
   "DUB-EDI:2026-08-01:2026-08-03": {
     "end_date": "2026-08-03",
