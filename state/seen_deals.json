@@ -49,6 +49,11 @@
     "first_seen": "2026-06-25",
     "last_alerted_price_eur": 42.1
   },
+  "BFS-GRO:2026-08-02:2026-08-04": {
+    "end_date": "2026-08-04",
+    "first_seen": "2026-07-24",
+    "last_alerted_price_eur": 98.41
+  },
   "BFS-MAN:2026-07-25:2026-07-27": {
     "end_date": "2026-07-27",
     "first_seen": "2026-06-25",
@@ -158,6 +163,11 @@
     "end_date": "2026-10-18",
     "first_seen": "2026-07-23",
     "last_alerted_price_eur": 77.98
+  },
+  "DUB-ARN:2026-10-23:2026-10-26": {
+    "end_date": "2026-10-26",
+    "first_seen": "2026-07-24",
+    "last_alerted_price_eur": 80.98
   },
   "DUB-ARN:2026-11-14:2026-11-16": {
     "end_date": "2026-11-16",
