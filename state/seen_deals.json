@@ -389,6 +389,11 @@
     "first_seen": "2026-06-25",
     "last_alerted_price_eur": 65.98
   },
+  "DUB-BTS:2027-01-23:2027-01-25": {
+    "end_date": "2027-01-25",
+    "first_seen": "2026-08-02",
+    "last_alerted_price_eur": 71.98
+  },
   "DUB-BVA:2026-09-11:2026-09-13": {
     "end_date": "2026-09-13",
     "first_seen": "2026-06-25",
