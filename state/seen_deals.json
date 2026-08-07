@@ -69,6 +69,11 @@
     "first_seen": "2026-06-25",
     "last_alerted_price_eur": 46.78
   },
+  "DUB-ACE:2026-12-05:2026-12-07": {
+    "end_date": "2026-12-07",
+    "first_seen": "2026-08-07",
+    "last_alerted_price_eur": 98.98
+  },
   "DUB-AGP:2026-11-14:2026-11-16": {
     "end_date": "2026-11-16",
     "first_seen": "2026-07-15",
@@ -122,7 +127,7 @@
   "DUB-AMS:2026-09-12:2026-09-14": {
     "end_date": "2026-09-14",
     "first_seen": "2026-07-30",
-    "last_alerted_price_eur": 69.98
+    "last_alerted_price_eur": 59.98
   },
   "DUB-AMS:2026-09-18:2026-09-20": {
     "end_date": "2026-09-20",
