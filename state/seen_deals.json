@@ -79,6 +79,11 @@
     "first_seen": "2026-08-09",
     "last_alerted_price_eur": 91.98
   },
+  "DUB-AGP:2026-11-07:2026-11-09": {
+    "end_date": "2026-11-09",
+    "first_seen": "2026-08-14",
+    "last_alerted_price_eur": 99.0
+  },
   "DUB-AGP:2026-11-14:2026-11-16": {
     "end_date": "2026-11-16",
     "first_seen": "2026-07-15",
