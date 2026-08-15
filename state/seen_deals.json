@@ -519,6 +519,11 @@
     "first_seen": "2026-06-26",
     "last_alerted_price_eur": 92.0
   },
+  "DUB-MIL:2026-10-09:2026-10-11": {
+    "end_date": "2026-10-11",
+    "first_seen": "2026-08-15",
+    "last_alerted_price_eur": 77.0
+  },
   "DUB-NTE:2026-09-25:2026-09-27": {
     "end_date": "2026-09-27",
     "first_seen": "2026-08-05",
