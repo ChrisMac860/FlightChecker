@@ -302,7 +302,7 @@
   "DUB-BER:2026-10-09:2026-10-11": {
     "end_date": "2026-10-11",
     "first_seen": "2026-08-19",
-    "last_alerted_price_eur": 94.98
+    "last_alerted_price_eur": 89.98
   },
   "DUB-BER:2026-10-10:2026-10-12": {
     "end_date": "2026-10-12",
@@ -553,6 +553,11 @@
     "end_date": "2026-09-27",
     "first_seen": "2026-08-05",
     "last_alerted_price_eur": 99.0
+  },
+  "DUB-OSL:2026-09-11:2026-09-13": {
+    "end_date": "2026-09-13",
+    "first_seen": "2026-08-19",
+    "last_alerted_price_eur": 72.0
   },
   "DUB-PAR:2026-09-25:2026-09-27": {
     "end_date": "2026-09-27",
