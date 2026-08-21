@@ -349,6 +349,11 @@
     "first_seen": "2026-08-02",
     "last_alerted_price_eur": 63.98
   },
+  "DUB-BGY:2026-11-28:2026-11-30": {
+    "end_date": "2026-11-30",
+    "first_seen": "2026-08-21",
+    "last_alerted_price_eur": 63.98
+  },
   "DUB-BIQ:2026-09-12:2026-09-14": {
     "end_date": "2026-09-14",
     "first_seen": "2026-07-28",
