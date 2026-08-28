@@ -34,6 +34,11 @@
     "first_seen": "2026-06-25",
     "last_alerted_price_eur": 76.38
   },
+  "BFS-ALC:2026-12-04:2026-12-06": {
+    "end_date": "2026-12-06",
+    "first_seen": "2026-08-28",
+    "last_alerted_price_eur": 70.18
+  },
   "BFS-ALC:2026-12-05:2026-12-07": {
     "end_date": "2026-12-07",
     "first_seen": "2026-07-01",
