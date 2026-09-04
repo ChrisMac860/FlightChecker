@@ -64,6 +64,11 @@
     "first_seen": "2026-08-27",
     "last_alerted_price_eur": 92.41
   },
+  "BFS-FAO:2026-10-24:2026-10-26": {
+    "end_date": "2026-10-26",
+    "first_seen": "2026-09-04",
+    "last_alerted_price_eur": 97.48
+  },
   "BFS-STN:2026-09-04:2026-09-06": {
     "end_date": "2026-09-06",
     "first_seen": "2026-06-25",
