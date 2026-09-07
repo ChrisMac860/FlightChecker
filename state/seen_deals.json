@@ -614,6 +614,11 @@
     "first_seen": "2026-08-12",
     "last_alerted_price_eur": 78.26
   },
+  "DUB-CGN:2026-11-14:2026-11-16": {
+    "end_date": "2026-11-16",
+    "first_seen": "2026-09-07",
+    "last_alerted_price_eur": 98.85
+  },
   "DUB-CGN:2026-11-21:2026-11-23": {
     "end_date": "2026-11-23",
     "first_seen": "2026-07-29",
