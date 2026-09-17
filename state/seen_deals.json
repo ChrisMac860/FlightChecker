@@ -758,5 +758,10 @@
     "end_date": "2026-09-27",
     "first_seen": "2026-06-25",
     "last_alerted_price_eur": 63.0
+  },
+  "DUB-TLS:2026-09-19:2026-09-21": {
+    "end_date": "2026-09-21",
+    "first_seen": "2026-09-17",
+    "last_alerted_price_eur": 89.0
   }
 }
