@@ -432,7 +432,7 @@
   "DUB-BER:2027-01-08:2027-01-10": {
     "end_date": "2027-01-10",
     "first_seen": "2026-09-20",
-    "last_alerted_price_eur": 87.98
+    "last_alerted_price_eur": 79.98
   },
   "DUB-BER:2027-01-30:2027-02-02": {
     "end_date": "2027-02-02",
@@ -603,6 +603,11 @@
     "end_date": "2027-01-10",
     "first_seen": "2026-09-09",
     "last_alerted_price_eur": 63.98
+  },
+  "DUB-BRU:2027-01-22:2027-01-24": {
+    "end_date": "2027-01-24",
+    "first_seen": "2026-09-20",
+    "last_alerted_price_eur": 59.98
   },
   "DUB-BSL:2026-10-31:2026-11-02": {
     "end_date": "2026-11-02",
