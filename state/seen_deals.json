@@ -72,7 +72,7 @@
   "DUB-ACE:2026-11-14:2026-11-16": {
     "end_date": "2026-11-16",
     "first_seen": "2026-09-21",
-    "last_alerted_price_eur": 57.98
+    "last_alerted_price_eur": 52.98
   },
   "DUB-ACE:2026-11-21:2026-11-23": {
     "end_date": "2026-11-23",
@@ -302,7 +302,7 @@
   "DUB-ARN:2027-02-06:2027-02-08": {
     "end_date": "2027-02-08",
     "first_seen": "2026-09-05",
-    "last_alerted_price_eur": 85.98
+    "last_alerted_price_eur": 78.98
   },
   "DUB-BCN:2026-09-26:2026-09-28": {
     "end_date": "2026-09-28",
