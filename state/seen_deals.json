@@ -729,6 +729,11 @@
     "first_seen": "2026-10-04",
     "last_alerted_price_eur": 63.0
   },
+  "DUB-MIL:2026-11-14:2026-11-16": {
+    "end_date": "2026-11-16",
+    "first_seen": "2026-10-04",
+    "last_alerted_price_eur": 64.0
+  },
   "DUB-MUC:2026-12-05:2026-12-07": {
     "end_date": "2026-12-07",
     "first_seen": "2026-08-31",
