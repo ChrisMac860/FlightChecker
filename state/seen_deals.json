@@ -587,7 +587,7 @@
   "DUB-BTS:2026-11-07:2026-11-09": {
     "end_date": "2026-11-09",
     "first_seen": "2026-06-25",
-    "last_alerted_price_eur": 62.63
+    "last_alerted_price_eur": 56.33
   },
   "DUB-BTS:2026-11-20:2026-11-22": {
     "end_date": "2026-11-22",
@@ -677,7 +677,7 @@
   "DUB-CRL:2026-10-31:2026-11-02": {
     "end_date": "2026-11-02",
     "first_seen": "2026-10-05",
-    "last_alerted_price_eur": 68.16
+    "last_alerted_price_eur": 56.65
   },
   "DUB-LIS:2026-11-13:2026-11-15": {
     "end_date": "2026-11-15",
