@@ -64,6 +64,11 @@
     "first_seen": "2026-09-04",
     "last_alerted_price_eur": 97.48
   },
+  "BFS-KRK:2026-10-25:2026-10-27": {
+    "end_date": "2026-10-27",
+    "first_seen": "2026-10-07",
+    "last_alerted_price_eur": 94.9
+  },
   "BFS-STN:2026-11-14:2026-11-16": {
     "end_date": "2026-11-16",
     "first_seen": "2026-06-25",
@@ -122,7 +127,7 @@
   "DUB-AGP:2026-11-21:2026-11-23": {
     "end_date": "2026-11-23",
     "first_seen": "2026-09-09",
-    "last_alerted_price_eur": 69.98
+    "last_alerted_price_eur": 57.98
   },
   "DUB-AGP:2026-11-27:2026-11-29": {
     "end_date": "2026-11-29",
@@ -242,7 +247,7 @@
   "DUB-AMS:2026-11-28:2026-11-30": {
     "end_date": "2026-11-30",
     "first_seen": "2026-08-21",
-    "last_alerted_price_eur": 64.98
+    "last_alerted_price_eur": 57.98
   },
   "DUB-AMS:2026-12-05:2026-12-07": {
     "end_date": "2026-12-07",
@@ -627,7 +632,7 @@
   "DUB-CGN:2026-11-07:2026-11-09": {
     "end_date": "2026-11-09",
     "first_seen": "2026-10-01",
-    "last_alerted_price_eur": 65.33
+    "last_alerted_price_eur": 52.98
   },
   "DUB-CGN:2026-11-14:2026-11-16": {
     "end_date": "2026-11-16",
@@ -658,6 +663,11 @@
     "end_date": "2027-02-08",
     "first_seen": "2026-09-01",
     "last_alerted_price_eur": 80.93
+  },
+  "DUB-CPH:2027-02-05:2027-02-07": {
+    "end_date": "2027-02-07",
+    "first_seen": "2026-10-07",
+    "last_alerted_price_eur": 85.98
   },
   "DUB-CRL:2026-10-31:2026-11-02": {
     "end_date": "2026-11-02",
