@@ -399,6 +399,11 @@
     "first_seen": "2026-09-20",
     "last_alerted_price_eur": 70.98
   },
+  "DUB-BER:2027-01-16:2027-01-18": {
+    "end_date": "2027-01-18",
+    "first_seen": "2026-10-07",
+    "last_alerted_price_eur": 81.38
+  },
   "DUB-BER:2027-01-30:2027-02-02": {
     "end_date": "2027-02-02",
     "first_seen": "2026-09-18",
