@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-31T10:07:31Z",
+  "generated_at": "2026-10-31T13:34:08Z",
   "deal_count": 106,
   "deals": [
     {
@@ -76,31 +76,6 @@
       "first_seen": "2026-10-26T18:05:58Z",
       "last_seen": "2026-10-31T10:07:31Z",
       "seen_count": 20
-    },
-    {
-      "id": "DUB-BGY:2026-11-21:2026-11-23",
-      "origin": "DUB",
-      "origin_city": "Dublin",
-      "destination": "Bergamo",
-      "destination_code": "BGY",
-      "destination_country": "it",
-      "route": "DUB → BGY",
-      "depart_date": "2026-11-21",
-      "return_date": "2026-11-23",
-      "dates_label": "Sat 21 Nov - Mon 23 Nov",
-      "nights": 2,
-      "days_off": 1,
-      "price": "EUR 43.98",
-      "price_value": 43.98,
-      "price_eur": 43.98,
-      "currency": "EUR",
-      "airline": "Ryanair",
-      "stops": "Non-stop",
-      "source": "ryanair",
-      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-11-21&dateIn=2026-11-23&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BGY&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-11-21&tpEndDate=2026-11-23&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BGY",
-      "first_seen": "2026-10-30T10:47:21Z",
-      "last_seen": "2026-10-31T03:44:40Z",
-      "seen_count": 4
     },
     {
       "id": "DUB-AGP:2026-11-28:2026-11-30",
@@ -2650,6 +2625,31 @@
       "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2027-01-30&dateIn=2027-02-02&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=ALC&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2027-01-30&tpEndDate=2027-02-02&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=ALC",
       "first_seen": "2026-10-31T10:07:28Z",
       "last_seen": "2026-10-31T10:07:28Z",
+      "seen_count": 1
+    },
+    {
+      "id": "DUB-KRK:2026-12-04:2026-12-06",
+      "origin": "DUB",
+      "origin_city": "Dublin",
+      "destination": "Krakow",
+      "destination_code": "KRK",
+      "destination_country": "",
+      "route": "DUB → KRK",
+      "depart_date": "2026-12-04",
+      "return_date": "2026-12-06",
+      "dates_label": "4 Dec - 6 Dec",
+      "nights": 2,
+      "days_off": 1,
+      "price": "£89",
+      "price_value": 89.0,
+      "price_eur": 104.13,
+      "currency": "GBP",
+      "airline": "Skyscanner",
+      "stops": "Price alert",
+      "source": "gmail",
+      "url": "",
+      "first_seen": "2026-10-31T13:34:08Z",
+      "last_seen": "2026-10-31T13:34:08Z",
       "seen_count": 1
     }
   ]
