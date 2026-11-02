@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-02T12:01:33Z",
-  "deal_count": 108,
+  "generated_at": "2026-11-02T18:42:32Z",
+  "deal_count": 109,
   "deals": [
     {
       "id": "DUB-BCN:2026-12-04:2026-12-06",
@@ -2201,6 +2201,31 @@
       "first_seen": "2026-10-23T09:00:13Z",
       "last_seen": "2026-11-02T12:01:29Z",
       "seen_count": 43
+    },
+    {
+      "id": "DUB-KRK:2026-12-04:2026-12-06",
+      "origin": "DUB",
+      "origin_city": "Dublin",
+      "destination": "Krakow",
+      "destination_code": "KRK",
+      "destination_country": "",
+      "route": "DUB → KRK",
+      "depart_date": "2026-12-04",
+      "return_date": "2026-12-06",
+      "dates_label": "4 Dec - 6 Dec",
+      "nights": 2,
+      "days_off": 1,
+      "price": "£77",
+      "price_value": 77.0,
+      "price_eur": 90.09,
+      "currency": "GBP",
+      "airline": "Skyscanner",
+      "stops": "Price alert",
+      "source": "gmail",
+      "url": "",
+      "first_seen": "2026-11-02T18:42:32Z",
+      "last_seen": "2026-11-02T18:42:32Z",
+      "seen_count": 1
     },
     {
       "id": "BFS-ALC:2026-12-19:2026-12-21",
