@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-06T04:45:28Z",
-  "deal_count": 99,
+  "generated_at": "2026-11-06T11:31:35Z",
+  "deal_count": 98,
   "deals": [
     {
       "id": "DUB-BCN:2026-12-11:2026-12-13",
@@ -176,31 +176,6 @@
       "first_seen": "2026-10-07T18:18:39Z",
       "last_seen": "2026-11-06T04:45:25Z",
       "seen_count": 116
-    },
-    {
-      "id": "DUB-CRL:2026-11-28:2026-11-30",
-      "origin": "DUB",
-      "origin_city": "Dublin",
-      "destination": "Charleroi",
-      "destination_code": "CRL",
-      "destination_country": "be",
-      "route": "DUB → CRL",
-      "depart_date": "2026-11-28",
-      "return_date": "2026-11-30",
-      "dates_label": "Sat 28 Nov - Mon 30 Nov",
-      "nights": 2,
-      "days_off": 1,
-      "price": "EUR 47.98",
-      "price_value": 47.98,
-      "price_eur": 47.98,
-      "currency": "EUR",
-      "airline": "Ryanair",
-      "stops": "Non-stop",
-      "source": "ryanair",
-      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2026-11-28&dateIn=2026-11-30&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=CRL&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2026-11-28&tpEndDate=2026-11-30&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=CRL",
-      "first_seen": "2026-11-03T04:58:31Z",
-      "last_seen": "2026-11-05T21:53:23Z",
-      "seen_count": 9
     },
     {
       "id": "DUB-BGY:2027-01-22:2027-01-24",
@@ -576,31 +551,6 @@
       "first_seen": "2026-10-06T14:40:06Z",
       "last_seen": "2026-11-06T04:45:25Z",
       "seen_count": 120
-    },
-    {
-      "id": "DUB-BER:2027-01-09:2027-01-11",
-      "origin": "DUB",
-      "origin_city": "Dublin",
-      "destination": "Berlin",
-      "destination_code": "BER",
-      "destination_country": "de",
-      "route": "DUB → BER",
-      "depart_date": "2027-01-09",
-      "return_date": "2027-01-11",
-      "dates_label": "Sat 9 Jan - Mon 11 Jan",
-      "nights": 2,
-      "days_off": 1,
-      "price": "EUR 59.98",
-      "price_value": 59.98,
-      "price_eur": 59.98,
-      "currency": "EUR",
-      "airline": "Ryanair",
-      "stops": "Non-stop",
-      "source": "ryanair",
-      "url": "https://www.ryanair.com/ie/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=2027-01-09&dateIn=2027-01-11&isConnectedFlight=false&isReturn=true&discount=0&promoCode=&originIata=DUB&destinationIata=BER&tpAdults=1&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate=2027-01-09&tpEndDate=2027-01-11&tpDiscount=0&tpPromoCode=&tpOriginIata=DUB&tpDestinationIata=BER",
-      "first_seen": "2026-11-04T15:54:53Z",
-      "last_seen": "2026-11-05T21:53:23Z",
-      "seen_count": 5
     },
     {
       "id": "DUB-ARN:2027-01-09:2027-01-11",
@@ -2476,6 +2426,31 @@
       "first_seen": "2026-11-05T15:59:54Z",
       "last_seen": "2026-11-06T04:45:25Z",
       "seen_count": 3
+    },
+    {
+      "id": "DUB-KRK:2026-12-04:2026-12-06",
+      "origin": "DUB",
+      "origin_city": "Dublin",
+      "destination": "Krakow",
+      "destination_code": "KRK",
+      "destination_country": "",
+      "route": "DUB → KRK",
+      "depart_date": "2026-12-04",
+      "return_date": "2026-12-06",
+      "dates_label": "4 Dec - 6 Dec",
+      "nights": 2,
+      "days_off": 1,
+      "price": "£92",
+      "price_value": 92.0,
+      "price_eur": 107.64,
+      "currency": "GBP",
+      "airline": "Skyscanner",
+      "stops": "Price alert",
+      "source": "gmail",
+      "url": "",
+      "first_seen": "2026-11-06T11:31:35Z",
+      "last_seen": "2026-11-06T11:31:35Z",
+      "seen_count": 1
     }
   ]
 }
